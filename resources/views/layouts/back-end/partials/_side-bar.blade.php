@@ -694,6 +694,28 @@
 
                             </ul>
                         </li>
+
+
+                         <li
+                            class="navbar-vertical-aside-has-menu {{ Request::is('admin/people*') ? 'active' : '' }}">
+                            <a class="js-navbar-vertical-aside-menu-link nav-link nav-link-toggle" href="javascript:">
+                                <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">People</span>
+                            </a>
+
+                            <ul class="js-navbar-vertical-aside-submenu nav nav-sub"
+                                style="display: {{ Request::is('admin/people*') ? 'block' : 'none' }}">
+
+                               <li class="nav-item {{ Request::is('admin/people*') ? 'active' : '' }}">
+                                    <a class="nav-link" href="{{ route('admin.people') }}">
+                                        <i class="tio-group nav-icon"></i>
+                                        <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">
+                                            {{ \App\CPU\translate('People') }}
+                                        </span>
+                                    </a>
+                                </li>
+
+                            </ul>
+                        </li>
                         <li
                             class="navbar-vertical-aside-has-menu {{ Request::is('admin/pos*') ? 'active' : '' }}">
                             <a class="js-navbar-vertical-aside-menu-link nav-link nav-link-toggle" href="javascript:">
@@ -760,14 +782,11 @@
                             </ul>
                         </li>
                         
+                         
 
-                        <br>
-                        <br>
-                        <br>
-                        <br>
-                        <br>
-                        <br>
+                      
                     </ul>
+                  
                 </div>
             </div>
         </div>

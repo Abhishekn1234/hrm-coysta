@@ -24,6 +24,17 @@ use  App\Http\Controllers\Admin\PayrollController;
 use App\Http\Controllers\Admin\DepartmentController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\LeaveRequestController;
+use App\Http\Controllers\UserAttendanceController;
+use App\Http\Controllers\AttendanceController;
+
+Route::prefix('v1')->group(function () {
+    Route::put('/users/{id}/attendance', [AttendanceController::class, 'store']);
+    Route::get('/user/{id}/attendance-monthly-summary', [AttendanceController::class, 'monthlySummary']);
+});
+
+Route::post('/users/{id}/attendance', [UserAttendanceController::class, 'update']);
+ Route::get('/users/{id}/attendance-monthly-summary', [AttendanceController::class, 'monthlySummary']);
+Route::get('/users/{id}/attendance', [UserAttendanceController::class, 'show']);
 Route::get('/department-distribution', [HrmController::class, 'getDepartmentDistribution']);
 
 Route::get('/messages/priorities', [MessageController::class, 'getPriorityEnums']);

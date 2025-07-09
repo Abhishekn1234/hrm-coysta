@@ -2753,4 +2753,6 @@
   'Inventory Management' => 'Inventory Management',
   'Inventory Group' => 'Inventory Group',
   'HRM' => 'HRM',
+  'P' => 'P',
+  'People' => 'People',
 );

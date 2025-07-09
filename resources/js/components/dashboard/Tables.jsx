@@ -1,9 +1,10 @@
 import React, { useState, useEffect,useRef,forwardRef,useImperativeHandle } from "react";
-import { Table, Badge, Tabs, Tab, Button, Pagination, Modal, Form, Row, Col, Alert, Spinner } from "react-bootstrap";
+import { Table, Badge, Tabs, Tab, Button, Pagination,ButtonGroup, Modal,Dropdown,  Form, Row, Col, Alert, Spinner } from "react-bootstrap";
 import { 
   FaEnvelope, FaEdit, FaTrash, FaBan, FaFileAlt,
   FaFilePdf, FaFileWord, FaFileImage, FaDownload, FaCheckCircle,
-  FaUser, FaBriefcase, FaMoneyBill,
+  FaUser, FaBriefcase, FaMoneyBill,FaGift,
+  FaClock, FaCalendarAlt, FaUserCheck, FaUserTimes, FaUserClock, FaHistory,
   FaEye, FaPlus, FaFileContract, FaPaperclip, FaUpload, FaIdCard, FaRobot
 } from "react-icons/fa";
 
@@ -13,9 +14,12 @@ import { toast } from "react-toastify";
 import axios from "axios";
 import html2pdf from "html2pdf.js";
 import './Table.css';
+import EmployeeBenefits from "./EmployeeBenefits";
 
 const Tables = forwardRef((props, ref) => {
   const slipRef = useRef();
+  const [showBenefitsModal, setShowBenefitsModal] = useState(false);
+
   const [showEdit, setShowEdit] = useState(false);
   const [selectedEmpId, setSelectedEmpId] = useState(null);
 const handleFileChange = (e) => {
@@ -32,7 +36,7 @@ const handleCheckboxChange = (e) => {
     ...prev,
     [name]: checked,
   }));
-};
+};  const handleShow = () => setShowModal(true);
 const handlePrintSlip = () => {
   const element = slipRef.current;
   const opt = {
@@ -143,7 +147,7 @@ useEffect(() => {
   }
 ]);
 const [activeTab, setActiveTab] = useState('personal');
-
+const [statusLoading, setStatusLoading] = useState(false);
 const handleNext = () => {
   if (activeTab === 'personal') setActiveTab('employment');
   else if (activeTab === 'employment') setActiveTab('salary');
@@ -295,7 +299,8 @@ const formatDate = (dateString) => {
       file: null
     },
     payrollDetails: null,
-    payrollMonth: new Date()
+    payrollMonth: new Date(),
+    attendance:""
   });
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -470,7 +475,7 @@ useEffect(() => {
     }
   };
 
-  // Handle form changes
+ 
 const handleChange = (e) => {
   const { name, value, type, checked, files } = e.target;
 
@@ -482,12 +487,17 @@ const handleChange = (e) => {
 
   setState(prevState => ({
     ...prevState,
+    leaveData: {
+      ...prevState.leaveData,
+      [name]: fieldValue
+    },
     messageData: {
       ...prevState.messageData,
       [name]: fieldValue
     }
   }));
 };
+
 
 
 const handleExperienceChange = (index, field, value) => {
@@ -707,6 +717,43 @@ const handleExperienceChange = (index, field, value) => {
       default: return <FaFileAlt />;
     }
   };
+const handleStatusChange = async (userId, status) => {
+  if (statusLoading) return;
+  try {
+    setStatusLoading(true);
+    const response = await fetch(`http://127.0.0.1:8000/api/v1/users/${userId}/attendance`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ status }),
+    });
+
+    const data = await response.json();
+    if (data.success) {
+      toast.success("Attendance status updated successfully");
+
+      // ✅ Update local state: set emp.attendance = new status
+      setState(prev => ({
+        ...prev,
+        employees: prev.employees.map(emp =>
+          emp.id === userId ? { ...emp, attendance: status } : emp
+        )
+      }));
+
+     
+       await fetchEmployees();
+    } else {
+      toast.error("Failed to update attendance");
+    }
+  } catch (error) {
+    console.error("Error updating status:", error);
+    toast.error("Something went wrong while updating status");
+  } finally {
+    setStatusLoading(false);
+  }
+};
+
 
   const unsuspendEmployee = async (empId) => {
     try {
@@ -922,13 +969,76 @@ useImperativeHandle(ref, () => ({
                     </Badge>
                   </td>
 
-                  <td>
-                    <div className="d-flex gap-1 flex-wrap" style={{ minWidth: "95px" }}>
-                      <span>{emp.daily_hours || "0h/d"}</span>
-                      <span>{emp.monthly_hours || "0h/m"}</span>
-                      <span>{emp.leave_days || "0L"}</span>
-                    </div>
-                  </td>
+                <td>
+                  <div className="d-flex align-items-center" style={{ minWidth: "100px" }}>
+                    <ButtonGroup
+                      className="w-100 justify-content-between"
+                      style={{
+                        border: "1px solid #ced4da",
+                        borderRadius: "4px",
+                        padding: "2px 4px",
+                        display: "flex",
+                        alignItems: "center",
+                        fontSize: "10px",
+                      }}
+                    >
+                      {/* Clock + Daily Hours */}
+                      <div className="d-flex align-items-center" style={{ gap: "2px" }}>
+                        <FaClock className="text-muted" size={10} />
+                        <span>{emp.daily_hours || "0h/d"}</span>
+                      </div>
+
+                      {/* Separator */}
+                      <div className="text-muted" style={{ padding: "0 4px" }}>|</div>
+
+                      {/* Calendar + Monthly Days */}
+                      <div className="d-flex align-items-center" style={{ gap: "2px" }}>
+                        <FaCalendarAlt className="text-muted" size={10} />
+                        <span>
+                            {(emp.working_days ? `${emp.working_days}d/m` :
+                              emp.leave_days ? `${emp.leave_days}d/m` : "0d/m")}
+                          </span>
+
+                      </div>
+
+                      {/* Separator */}
+                      <div className="text-muted" style={{ padding: "0 4px" }}>|</div>
+
+                      {/* Dropdown P/A/L */}
+                      <Dropdown as={ButtonGroup}>
+                        <Dropdown.Toggle
+                          variant="light"
+                          size="sm"
+                          style={{
+                            padding: "0px 6px",
+                            fontWeight: "bold",
+                            fontSize: "10px",
+                            lineHeight: "1",
+                            
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          {(emp.attendance || "").charAt(0).toUpperCase() || "P"}
+                        </Dropdown.Toggle>
+
+                        <Dropdown.Menu>
+                          <Dropdown.Item onClick={() => handleStatusChange(emp.id, 'present')}>
+                            <FaUserCheck className="me-2 text-success" /> Present
+                          </Dropdown.Item>
+                          <Dropdown.Item onClick={() => handleStatusChange(emp.id, 'absent')}>
+                            <FaUserTimes className="me-2 text-danger" /> Absent
+                          </Dropdown.Item>
+                          <Dropdown.Item onClick={() => handleStatusChange(emp.id, 'late')}>
+                            <FaUserClock className="me-2 text-warning" /> Late
+                          </Dropdown.Item>
+                        </Dropdown.Menu>
+                      </Dropdown>
+                    </ButtonGroup>
+                  </div>
+                </td>
+
 
                   <td
                     style={{ ...styles.valueCell, cursor: "pointer" }}
@@ -1009,6 +1119,20 @@ useImperativeHandle(ref, () => ({
                       >
                         <FaFileAlt />
                       </Button>
+                   <Button
+                    variant="outline-success"
+                    size="sm"
+                    onClick={() => setShowBenefitsModal(true)}
+                  >
+                    <FaGift className="me-1" />
+                  </Button>
+
+                  <EmployeeBenefits
+                    show={showBenefitsModal}
+                    onHide={() => setShowBenefitsModal(false)}
+                    employee={emp}
+                  />
+
                     </div>
                   </td>
                 </tr>

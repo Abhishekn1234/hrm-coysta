@@ -97,6 +97,9 @@ Route::group(['namespace' => 'Admin', 'prefix' => 'admin', 'as' => 'admin.'], fu
        Route::get('hrm', function () {
             return view('admin-views.react-hrm-module');
         })->name('hrm');
+         Route::get('people', function () {
+            return view('admin-views.people-module');
+        })->name('people');
     Route::group(['prefix' => 'staff', 'as' => 'staff.'], function () {
         Route::post('add-new', 'StaffController@store')->name('store');
         Route::get('list', 'StaffController@list')->name('list');
