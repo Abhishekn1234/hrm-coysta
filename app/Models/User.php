@@ -23,6 +23,12 @@ public function documents()
 {
     return $this->hasMany(EmployeeDocument::class, 'user_id');
 }
+// app/Models/User.php
+public function leaveRequests()
+{
+    return $this->hasMany(LeaveRequest::class, 'employee_id');
+}
+
 // public function documents()
 // {
 //     return $this->hasMany(Document::class, 'user_id');
@@ -34,87 +40,55 @@ public function documents()
      *
      * @var list<string>
      */
-   protected $fillable = [
-    'first_name',
-    'last_name',
-    'user_type',
-    'name',
-    'email',
-    'email_verified_at',
-    'password',
-    'phone',
-    'place',
-    'address',
-    'gender',
-    'hourly_rate',
-    'monthly_rate',
-    'date_of_birth',
-    'qualification',
-    'experience',
-    'expertise',
-    'designation',
-    'role',
-    'image',
-    'reports_to',
-    'status',
-    'join_type',
-    'join_date',
-    'work_location',
-    'employment_type',
-    'annual_ctc',
-    'basic_salary',
-    'hra',
-    'special_allowances',
-    'probation_period',
-    'bank_name',
-    'account_holder_name',
-    'account_number',
-    'ifsc_code',
-    'branch',
-    'remember_token',
-
-    // Emergency contact
-    'emergency_contact_name',
-    'emergency_contact_relationship',
-    'emergency_contact_phone',
-    'emergency_contact_email',
-
-    // Employment
-    'position',
-    'department',
-    'hire_date',
-    'reporting_manager',
-
-    // Employment history (flattened)
-    'previous_company',
-    'previous_start_date',
-    'previous_end_date',
-    'previous_position',
-    'previous_responsibilities',
-
+  protected $fillable = [
+    // Basic Info
+    'first_name', 'last_name', 'name', 'user_type', 'email', 'email_verified_at', 'password', 'phone', 'place', 'address', 'gender',
+    
     // Salary
-    'base_salary',
-    'pay_frequency',
-    'housing_allowance',
-    'transport_allowance',
-    'medical_allowance',
-    'other_allowances',
+    'hourly_rate', 'monthly_rate', 'annual_ctc', 'basic_salary', 'hra', 'special_allowances', 'probation_period',
+    'base_salary', 'pay_frequency', 'housing_allowance', 'transport_allowance', 'medical_allowance', 'other_allowances',
 
-    // Banking
-    'routing_number',
-    'payment_method',
+    // Qualification & Experience
+    'qualification', 'experience', 'expertise', 'qualifications', 'experiences', 'skills',
 
-    // Document uploads
-    'resume',
-    'id_proof',
-    'employment_contract',
-    'medical_certificate',
-    'education_certificates',
+    // Job Details
+    'designation', 'role', 'status', 'reports_to', 'position', 'department', 'hire_date', 'reporting_manager',
+    'join_type', 'join_date', 'work_location', 'employment_type', 'staff_type', 'nature_of_staff',
+
+    // Attendance & Others
+    'attendance', 'date_of_birth', 'blood_group', 'daily_remuneration', 'rent_allowance_percent', 'casual_leaves',
+    'covid_vaccinated',
+
+    // Contacts
+    'work_phone', 'personal_email', 'parent_mobile',
+    'emergency_contact_name', 'emergency_contact_relationship', 'emergency_contact_phone', 'emergency_contact_email',
+    'emergency_contact_1', 'emergency_contact_2',
+
+    // Previous Employment
+    'previous_company', 'previous_start_date', 'previous_end_date', 'previous_position', 'previous_responsibilities',
+
+    // Documents
+    'resume', 'id_proof', 'employment_contract', 'medical_certificate', 'education_certificates',
+    'aadhar_front', 'aadhar_back', 'driving_license_front', 'driving_license_back',
+    'photo', 'passport_size_photo', 'pan_card',
+    'passport_front', 'passport_back', 'pf_document', 'esi_document',
+    
+    // Additional Docs
+    'info_date', 'info_title', 'info_description',
+    'bank_document_date', 'bank_document_title', 'bank_document_description', 'bank_document_file',
+
+    // Bank
+    'bank_name', 'account_holder_name', 'account_number', 'ifsc_code', 'branch', 'routing_number', 'payment_method',
 
     // Flags
-    'documents_authentic',
-    'suspend'
-];
+    'documents_authentic', 'suspend', 'isLogin',
+
+    // Profile Image
+    'ProfileImage',
+
+    // Tokens
+    'remember_token',
+   ];
 
 
     /**

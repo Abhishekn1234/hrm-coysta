@@ -1,11 +1,22 @@
+import React from 'react';
 import { Form } from 'react-bootstrap';
 
-export default function Skills() {
+export default function Skills({ selectedSkills, setSelectedSkills }) {
+  const handleChange = (e) => {
+    const options = Array.from(e.target.selectedOptions, option => option.value);
+    setSelectedSkills(options);
+  };
+
   return (
     <Form>
       <Form.Group>
         <Form.Label>Skills</Form.Label>
-        <Form.Select multiple style={{ height: '150px' }}>
+        <Form.Select
+          multiple
+          style={{ height: '150px' }}
+          value={selectedSkills}
+          onChange={handleChange}
+        >
           <option>Client Service</option>
           <option>Sales</option>
           <option>Video Design</option>

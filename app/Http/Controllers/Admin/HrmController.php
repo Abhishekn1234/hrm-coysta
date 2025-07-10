@@ -253,7 +253,42 @@ class HrmController extends Controller
     }
 }
 
+public function getCounts()
+    {
+        $total = User::where('user_type', 'STAFF')->count();
 
+        $active = User::where('user_type', 'STAFF')
+            ->where('status', 1) // assuming 1 means active
+            ->count();
+
+        $inactive = User::where('user_type', 'STAFF')
+            ->where(function ($query) {
+                $query->where('status', 0)->orWhereNull('status');
+            })
+            ->count();
+
+        return response()->json([
+            'total_staff' => $total,
+            'active_staff' => $active,
+            'inactive_staff' => $inactive
+        ]);
+    }
+
+    // Get monthly count of staff (based on join_date)
+    public function getMonthlyStaffCounts()
+    {
+        $monthlyCounts = User::select(
+                DB::raw("DATE_FORMAT(join_date, '%Y-%m') as month"),
+                DB::raw("COUNT(*) as count")
+            )
+            ->where('user_type', 'STAFF')
+            ->whereNotNull('join_date')
+            ->groupBy('month')
+            ->orderBy('month', 'asc')
+            ->get();
+
+        return response()->json($monthlyCounts);
+    }
 
     // 4️⃣ Get all employees
   

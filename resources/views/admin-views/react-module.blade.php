@@ -3,6 +3,8 @@
 <head>
     @viteReactRefresh
     @vite(['resources/js/app.jsx', 'resources/css/app.css'])
+      <script src="https://cdn.tailwindcss.com"></script>
+
 </head>
 @extends('layouts.back-end.app')
 <body class="bg-gray-100">
