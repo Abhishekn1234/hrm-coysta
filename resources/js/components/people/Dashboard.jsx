@@ -113,61 +113,7 @@ export default function Dashboard() {
 
 
       {/* Filters Section */}
-      <Card className="mb-3">
-        <Card.Body>
-          {/* First Row - Search and Org Select */}
-          <Row className="mb-3 g-3">
-            <Col md={6}>
-              <Form.Control
-                type="search"
-                placeholder="Search..."
-                style={{ borderRadius: '12px', padding: '0.6rem 1rem' }}
-              />
-            </Col>
-            <Col md={6}>
-              <Form.Select style={{ borderRadius: '12px', padding: '0.6rem 1rem' }}>
-                <option>All Organizations</option>
-                <option>Organization 1</option>
-                <option>Organization 2</option>
-              </Form.Select>
-            </Col>
-          </Row>
-
-          {/* Second Row - Type & Designation */}
-          <Row className="mb-3 g-3">
-            <Col md={6}>
-              <Form.Select style={{ borderRadius: '12px', padding: '0.6rem 1rem' }}>
-                <option>All Types</option>
-                <option>Type 1</option>
-                <option>Type 2</option>
-              </Form.Select>
-            </Col>
-            <Col md={6}>
-              <Form.Select style={{ borderRadius: '12px', padding: '0.6rem 1rem' }}>
-                <option>All Designations</option>
-                <option>Designation 1</option>
-                <option>Designation 2</option>
-              </Form.Select>
-            </Col>
-          </Row>
-
-          {/* Third Row - Skills & Reset */}
-          <Row className="align-items-center g-3">
-            <Col md={10}>
-              <Form.Select style={{ borderRadius: '12px', padding: '0.6rem 1rem' }}>
-                <option>All Skills</option>
-                <option>Skill 1</option>
-                <option>Skill 2</option>
-              </Form.Select>
-            </Col>
-            <Col md={2} className="text-md-end text-start">
-              <Button variant="link" className="text-primary fw-semibold p-0">
-                Reset Filters
-              </Button>
-            </Col>
-          </Row>
-        </Card.Body>
-      </Card>
+      
     </>
   );
 }

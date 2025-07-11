@@ -13,6 +13,7 @@ import {
   useAccordionButton,
   AccordionContext
 } from 'react-bootstrap';
+import { toast } from 'react-toastify';
 
 import {
   FaEdit,
@@ -40,7 +41,7 @@ import {
 } from 'react-icons/fa';
 
 import { BsChevronRight, BsChevronDown } from 'react-icons/bs';
-
+import axios from 'axios';
 // Custom components
 import Dashboard from './Dashboard';
 import StaffTable from './StaffTable';
@@ -91,10 +92,11 @@ function CustomAccordionToggle({ children, eventKey, icon }) {
   );
 }
 export default function Staffdetail() {
- const [loginEnabled, setLoginEnabled] = useState(true);
-  const [organization, setOrganization] = useState("Bangalore Branch");
-  const [username, setUsername] = useState("arun.k");
-  const [password, setPassword] = useState("password123");
+ const [loginEnabled, setLoginEnabled] = useState(false);
+const [organization, setOrganization] = useState('');
+const [username, setUsername] = useState('');
+const [password, setPassword] = useState('');
+
   const [contactPersons, setContactPersons] = useState([]);
   const [addresses, setAddresses] = useState([]);
   const [documents, setDocuments] = useState([]);
@@ -169,27 +171,48 @@ export default function Staffdetail() {
     ];
     setDocuments(docs);
   };
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setStaff((prev) => ({ ...prev, [name]: value }));
+  };
 
-  useEffect(() => {
-    if (state?.staff) {
-      setStaff(state.staff);
-      generateDocuments(state.staff);
-      setLoading(false);
-    } else {
-      const fetchStaff = async () => {
-        try {
-          const res = await axios.get(`http://127.0.0.1:8000/api/v1/staff/${id}`);
-          setStaff(res.data);
-          generateDocuments(res.data);
-        } catch (error) {
-          console.error('Failed to fetch staff:', error);
-        } finally {
-          setLoading(false);
-        }
-      };
-      fetchStaff();
-    }
-  }, [id, state]);
+  const handleFileChange = (e) => {
+  const file = e.target.files[0];
+  setStaff((prev) => ({ ...prev, bank_document_file: file.name, bank_document: file }));
+};
+
+
+const [selectedSkills, setSelectedSkills] = useState([]);
+const populateLoginFields = (staffData) => {
+  setLoginEnabled(!!staffData?.isLogin);
+  setOrganization(staffData?.organization || '');
+  setUsername(staffData?.email || ''); // assuming username = email
+  setPassword(''); // keep blank for security (you usually don't fetch password)
+};
+
+ useEffect(() => {
+  if (state?.staff) {
+    setStaff(state.staff);
+    populateLoginFields(state.staff);
+    generateDocuments(state.staff);
+    setLoading(false);
+  } else {
+    const fetchStaff = async () => {
+      try {
+        const res = await axios.get(`http://127.0.0.1:8000/api/v1/staff/${id}`);
+        setStaff(res.data);
+        populateLoginFields(res.data);
+        generateDocuments(res.data);
+      } catch (error) {
+        console.error('Failed to fetch staff:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStaff();
+  }
+}, [id, state]);
+
 
   useEffect(() => {
     if (peopleTabKey === 'staff') {
@@ -200,12 +223,42 @@ export default function Staffdetail() {
       navigate('/vendor');
     }
   }, [peopleTabKey, navigate]);
+const handleUpdateStaff = async () => {
+  try {
+    const response = await axios.put(
+      `http://127.0.0.1:8000/api/v1/staff/${staff.id}`,
+      staff
+    );
+    toast.success("✅ Staff updated successfully!");
+    setShowEditModal(false);
+  } catch (error) {
+    console.error("Failed to update staff:", error.response?.data || error.message);
+    toast.error("❌ Failed to update staff. Please check your input.");
+  }
+};
 
   // Loading or error state UI
   if (loading) return <p>Loading...</p>;
   if (!staff) return <p className="text-danger">Staff not found</p>;
   if (!documents.length) return <div>Loading documents...</div>;
+const handleDeleteStaff = async () => {
+  if (!staff?.id) {
+    toast.error("Invalid staff ID");
+    return;
+  }
 
+  const confirmDelete = window.confirm("Are you sure you want to delete this staff?");
+  if (!confirmDelete) return;
+
+  try {
+    await axios.delete(`http://127.0.0.1:8000/api/v1/staff/${staff.id}`);
+    toast.success("Staff deleted successfully");
+    navigate('/admin/people');
+  } catch (error) {
+    console.error("Delete failed:", error);
+    toast.error("Failed to delete staff");
+  }
+};
   return (
     <>
     <div className="p-4 bg-light">
@@ -239,10 +292,14 @@ export default function Staffdetail() {
         <FaEdit className="me-1" />
         Edit
       </button>
-      <button className="btn btn-outline-danger d-flex align-items-center">
-        <FaTrash className="me-1" />
-        Delete
-      </button>
+     <button
+  className="btn btn-outline-danger d-flex align-items-center"
+  onClick={handleDeleteStaff}
+>
+  <FaTrash className="me-1" />
+  Delete
+</button>
+
     </div>
   </div>
 
@@ -748,9 +805,9 @@ export default function Staffdetail() {
         onChange={(e) => setOrganization(e.target.value)}
       >
         <option value="">Select Organization</option>
-        <option value="Bangalore Branch">Bangalore Branch</option>
-        <option value="Kochi Branch">Kochi Branch</option>
-        <option value="Calicut Branch">Calicut Branch</option>
+        <option>Bangalore Branch</option>
+        <option>Kochi Branch</option>
+        <option>Calicut Branch</option>
       </Form.Select>
     </Col>
   </Row>
@@ -790,7 +847,7 @@ export default function Staffdetail() {
              <Accordion.Item eventKey="0">
          <CustomAccordionToggle eventKey="0" icon={<FaUser />}>Staff Details</CustomAccordionToggle>
          <Accordion.Body className="pb-4 ps-4 pe-4">
-             <StaffDetails />
+             <StaffDetails data={staff} setData={setStaff} />
          </Accordion.Body>
          </Accordion.Item>
  
@@ -798,21 +855,21 @@ export default function Staffdetail() {
              <Accordion.Item eventKey="1">
          <CustomAccordionToggle eventKey="1" icon={<FaPhone />}>Contact Information</CustomAccordionToggle>
          <Accordion.Body className="pb-4 ps-4 pe-4">
-             <ContactForm />
+             <ContactForm data={staff} setData={setStaff}/>
          </Accordion.Body>
          </Accordion.Item>
  
                  <Accordion.Item eventKey="2">
              <CustomAccordionToggle eventKey="2" icon={<FaDollarSign />}>Financial & HR Details</CustomAccordionToggle>
              <Accordion.Body className="pb-4 ps-4 pe-4">
-                 <FinancialHR />
+                 <FinancialHR data={staff} setData={setStaff} />
              </Accordion.Body>
              </Accordion.Item>
  
  
        <Accordion.Item eventKey="3">
          <CustomAccordionToggle eventKey="3" icon={<FaCertificate />}>Skills</CustomAccordionToggle>
-         <Accordion.Body className="pb-4 ps-4 pe-4"> <Skills/> </Accordion.Body>
+         <Accordion.Body className="pb-4 ps-4 pe-4"> <Skills data={selectedSkills} setData={setSelectedSkills}/> </Accordion.Body>
        </Accordion.Item>
  
       <Accordion.Item eventKey="4">
@@ -857,38 +914,64 @@ export default function Staffdetail() {
        <Accordion.Item eventKey="5">
    <CustomAccordionToggle eventKey="5" icon={<FaBuilding />}>Bank Details</CustomAccordionToggle>
    <Accordion.Body className="pb-4 ps-4">
-     <div className="row">
-       {/* Date and Title */}
-       <div className="col-md-6 mb-3">
-         <label className="form-label">Date</label>
-         <input type="date" className="form-control" />
-       </div>
-       <div className="col-md-6 mb-3">
-         <label className="form-label">Title</label>
-         <input type="text" className="form-control" placeholder="Enter title" />
-       </div>
- 
-       {/* Description */}
-       <div className="col-md-12 mb-3">
-         <label className="form-label">Description</label>
-         <textarea className="form-control" rows="3" placeholder="Enter description" />
-       </div>
- 
-       {/* Bank Document Upload */}
-       <div className="col-md-6 mb-3">
-         <label className="form-label">Bank Document</label>
-        <div className="file-uploads-box">
- 
-           <input type="file" className="d-none" id="bank-doc-upload" />
-           <label htmlFor="bank-doc-upload" className="file-uploads-label text-center">
-             <i className="fas fa-upload uploads-icon mb-2"></i>
-             <div className="uploads-text">
-               <strong>Click to upload</strong> or drag and drop
-             </div>
-           </label>
-         </div>
-       </div>
-     </div>
+   <div className="pb-4 ps-4 pe-4">
+      <div className="row">
+        <div className="col-md-6 mb-3">
+          <label className="form-label">Date</label>
+          <input
+            type="date"
+            className="form-control"
+            name="date"
+            value={staff.bank_document_date}
+            onChange={handleChange}
+          />
+        </div>
+        <div className="col-md-6 mb-3">
+          <label className="form-label">Title</label>
+          <input
+            type="text"
+            className="form-control"
+            name="title"
+            placeholder="Enter title"
+            value={staff.bank_document_title}
+            onChange={handleChange}
+          />
+        </div>
+
+        <div className="col-md-12 mb-3">
+          <label className="form-label">Description</label>
+          <textarea
+            className="form-control"
+            name="description"
+            rows="3"
+            placeholder="Enter description"
+            value={staff.bank_document_description}
+            onChange={handleChange}
+          />
+        </div>
+
+        <div className="col-md-6 mb-3">
+          <label className="form-label">Bank Document</label>
+          <div className="file-uploads-box">
+            <input
+              type="file"
+              id="bank-doc-upload"
+              className="d-none"
+              onChange={handleFileChange}
+            />
+            <label htmlFor="bank-doc-upload" className="file-uploads-label text-center">
+              <i className="fas fa-upload uploads-icon mb-2"></i>
+              <div className="uploads-text">
+                <strong>Click to upload</strong> or drag and drop
+              </div>
+              {staff.bank_document_file && (
+                <div className="text-success mt-2">{staff.bank_document_file}</div>
+              )}
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
    </Accordion.Body>
  </Accordion.Item>
  
@@ -898,9 +981,13 @@ export default function Staffdetail() {
     <Button variant="secondary" onClick={() => setShowEditModal(false)}>
       Cancel
     </Button>
-    <Button variant="primary">
-      Edit Staffs
-    </Button>
+   <Button
+  variant="primary"
+  onClick={handleUpdateStaff}
+>
+  Edit Staffs
+</Button>
+
   </Modal.Footer>
 </Modal>
 

@@ -26,6 +26,7 @@ import {
   FaClipboardList,
   FaBriefcase,
   FaPlus,
+  FaTrash,
   FaPhone,
   FaDollarSign,
   FaCertificate,
@@ -33,6 +34,7 @@ import {
   FaBuilding
 } from 'react-icons/fa';
 import { BsChevronRight, BsChevronDown } from "react-icons/bs";
+import axios from 'axios';
 
 // Custom components
 import StaffDetails from './StaffDetails';
@@ -42,10 +44,12 @@ import Skills from './Skills';
 import Dashboard from './Dashboard';
 import StaffTable from './StaffTable';
 import CustomerProfileForm from './CustomerProfileForm';
-
+import { toast } from 'react-toastify';
 // Styles
 import './styles.css';
 import './page.css';
+import CustomerProfiles from './CustomerProfiles';
+
 function CustomAccordionToggle({ children, eventKey, icon }) {
   const { activeEventKey } = useContext(AccordionContext);
   const decoratedOnClick = useAccordionButton(eventKey);
@@ -81,19 +85,26 @@ function CustomAccordionToggle({ children, eventKey, icon }) {
     </div>
   );
 }
+
 export default function Customerdetail() {
-     const { id } = useParams();
+
+ const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [customer, setCustomer] = useState(location.state?.customer || null);
-  const [activeKey, setActiveKey] = useState('profile');
-  const [contactPersons, setContactPersons] = useState([]);
-  const [addresses, setAddresses] = useState([]);
+  // State setup
+  const [customer, setCustomer] = useState({});
   const [gstDetails, setGstDetails] = useState([]);
-  const [showForm, setShowForm] = useState(false);
+  const [loginEnabled, setLoginEnabled] = useState(false);
+const [organization, setOrganization] = useState('');
+const [username, setUsername] = useState('');
+const [password, setPassword] = useState('');
+  const [addresses, setAddresses] = useState([]);
+  const [contactPersons, setContactPersons] = useState([]);
   const [newAddress, setNewAddress] = useState({ address: '', city: '', state: '', pincode: '' });
+  const [showForm, setShowForm] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [activeKey, setActiveKey] = useState('profile');
 
   const quickActions = [
     { label: 'New Project', icon: <FaPlus /> },
@@ -103,54 +114,100 @@ export default function Customerdetail() {
     { label: 'Send Mail', icon: <FaEnvelope /> }
   ];
 
+  // Fetch customer data
   useEffect(() => {
-    if (!customer && id) {
-      axios.get(`http://127.0.0.1:8000/api/customers/${id}`)
-        .then(res => setCustomer(res.data))
-        .catch(err => console.error('Failed to fetch customer:', err));
+    if (id) {
+      axios.get(`http://127.0.0.1:8000/api/customer/customer/${id}`)
+        .then((res) => {
+          const data = res.data;
+          setCustomer(data);
+          setGstDetails(data.gst_details || []);
+          setAddresses(data.shipping_addresses || []);
+          setContactPersons(data.contact_persons || []);
+        })
+        .catch((err) => {
+          console.error('Failed to fetch customer:', err);
+          toast.error('Failed to load customer data');
+        });
     }
   }, [id]);
 
-  const handleAddContact = () => {
-    setContactPersons([...contactPersons, {
-      name: '', designation: '', workEmail: '', workPhone: '', personalEmail: '', personalPhone: ''
-    }]);
+  // Update field in customer object
+  const handleCustomerUpdate = (updatedCustomer) => {
+    setCustomer(updatedCustomer);
   };
 
-  const handleAddGst = () => {
-    setGstDetails([...gstDetails, { gstNo: '', placeOfSupply: '' }]);
-  };
-
-  const handleRemoveGst = (index) => {
-    const updated = [...gstDetails];
-    updated.splice(index, 1);
-    setGstDetails(updated);
-  };
-
-  const handleInputChange = (field, value) => {
-    setNewAddress(prev => ({ ...prev, [field]: value }));
-  };
-
+  // GST update
   const handleGstChange = (index, field, value) => {
     const updated = [...gstDetails];
-    updated[index][field] = value;
+    updated[index] = { ...updated[index], [field]: value };
     setGstDetails(updated);
   };
 
-  if (!customer) return <p className="text-danger">Customer not found.</p>;
-  
+  // Address update
+  const handleAddressEdit = (index, field, value) => {
+    const updated = [...addresses];
+    updated[index] = { ...updated[index], [field]: value };
+    setAddresses(updated);
+  };
+
+  // Contact person update
+  const handleContactChange = (index, field, value) => {
+    const updated = [...contactPersons];
+    updated[index] = { ...updated[index], [field]: value };
+    setContactPersons(updated);
+  };
+
+  // Add new address
+  const handleAddNewAddress = () => {
+    if (newAddress.address && newAddress.city && newAddress.state && newAddress.pincode) {
+      setAddresses([...addresses, newAddress]);
+      setNewAddress({ address: '', city: '', state: '', pincode: '' });
+      setShowForm(false);
+    } else {
+      toast.error('Please fill all address fields');
+    }
+  };
+
+  // Update customer to backend
+  const handleUpdateCustomer = async () => {
+    try {
+      const payload = {
+        ...customer,
+        gst_details: gstDetails,
+        shipping_addresses: addresses,
+        contact_persons: contactPersons
+      };
+
+      await axios.put(`http://127.0.0.1:8000/api/customer/customer/${id}`, payload);
+      toast.success('Customer updated successfully!');
+      setShowEditModal(false);
+    } catch (err) {
+      console.error('Failed to update customer:', err);
+      toast.error('Failed to update customer');
+    }
+  };
+  const handleDeleteCustomer = async (id) => {
+  try {
+    await axios.delete(`http://127.0.0.1:8000/api/customer/customer/${id}`);
+    toast.success('Customer deleted successfully!');
+    // Optionally: redirect or refresh list
+    navigate('/customer'); // or any appropriate path
+  } catch (error) {
+    console.error('Delete failed:', error);
+    toast.error('Failed to delete customer');
+  }
+};
+
+  if (!customer) return <p>Loading...</p>;
   return (
     <div className="bg-light min-vh-100">
-      {/* Top Tabs styled like nav pills */}
-    
-
       <Container className="py-4">
         {/* Back Button */}
         <div className="mb-3">
-        <Button variant="link" onClick={() => navigate(-1)} className="p-0 text-primary">
+          <Button variant="link" onClick={() => navigate(-1)} className="p-0 text-primary">
             ← Back to Customers
-            </Button>
-
+          </Button>
         </div>
 
         {/* Header Section */}
@@ -160,281 +217,298 @@ export default function Customerdetail() {
               className="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center shadow"
               style={{ width: 80, height: 80, fontSize: '2rem' }}
             >
-              {customer.company.charAt(0)}
+              {customer.company_name?.charAt(0) || 'C'}
             </div>
             <div>
-              <h3 className="fw-bold mb-1">{customer.company}</h3>
-              <div className="text-muted">{customer.branch}</div>
-              <div className="small text-muted">Last login: {customer.lastLogin}</div>
+              <h3 className="fw-bold mb-1">{customer.company_name}</h3>
+              <div className="text-muted">{customer.organization}</div>
+             <div className="small text-muted">
+  Last login: {customer?.created_at ? customer.created_at.slice(0, 10) : 'Never'}
+</div>
+
             </div>
           </div>
           <div className="d-flex gap-2">
             <Button variant="outline-primary" onClick={() => setShowEditModal(true)}>
-          <i className="bi bi-pencil-square"></i> Edit
-        </Button>
-            <Button variant="outline-danger">
+              <i className="bi bi-pencil-square"></i> Edit
+            </Button>
+            <Button variant="outline-danger" onClick={() => handleDeleteCustomer(customer.id)}>
               <i className="bi bi-trash"></i> Delete
             </Button>
+
           </div>
         </div>
 
         {/* Quick Actions */}
         <div className="bg-white p-3 rounded shadow-sm mb-4">
-  <h6 className="text-muted mb-3">Quick Actions</h6>
-  <div className="d-flex flex-wrap gap-3">
-    {quickActions.map((action, idx) => (
-      <Button key={idx} variant="light" className="border text-nowrap d-flex align-items-center gap-2">
-        {action.icon} {action.label}
-      </Button>
-    ))}
-  </div>
-</div>
-
+          <h6 className="text-muted mb-3">Quick Actions</h6>
+          <div className="d-flex flex-wrap gap-3">
+            {quickActions.map((action, idx) => (
+              <Button key={idx} variant="light" className="border text-nowrap d-flex align-items-center gap-2">
+                {action.icon} {action.label}
+              </Button>
+            ))}
+          </div>
+        </div>
 
         {/* Detail Tabs */}
         <div className="bg-white p-3 rounded shadow-sm">
-          <Tabs activeKey={tab} onSelect={(k) => setTab(k)} className="mb-3">
-          <Tab
-            eventKey="profile"
-            title={
+          <Tabs activeKey={activeKey} onSelect={(k) => setActiveKey(k)} className="mb-3">
+            <Tab
+              eventKey="profile"
+              title={
                 <div className="d-inline-flex align-items-center">
-                <FaUser className="me-2" />
-                <span>Profile</span>
+                  <FaUser className="me-2" />
+                  <span>Profile</span>
                 </div>
-            }
+              }
             >
+              {/* Company & Contact Info */}
+              <div className="mb-4">
+                <h5 className="mb-3">Company & Contact Information</h5>
+                <hr/>
+                <div className="row mb-2">
+                  <div className="col-md-4">
+                    <strong>Organization:</strong>
+                    <div>{customer.organization || 'N/A'}</div>
+                  </div>
+                  <div className="col-md-4">
+                    <strong>Customer Type:</strong>
+                    <div>{customer.customer_type || 'N/A'}</div>
+                  </div>
+                  <div className="col-md-4">
+                    <strong>Company Name:</strong>
+                    <div>{customer.company_name || 'N/A'}</div>
+                  </div>
+                </div>
 
-  {/* Company & Contact Info */}
-  <div className="mb-4">
-    <h5 className="mb-3">Company & Contact Information</h5>
-   <hr/>
-    <div className="row mb-2">
-      <div className="col-md-4">
-        <strong>Organization:</strong>
-        <div>Bangalore Branch</div>
-      </div>
-      <div className="col-md-4">
-        <strong>Customer Type:</strong>
-        <div>Business</div>
-      </div>
-      <div className="col-md-4">
-        <strong>Company Name:</strong>
-        <div>Global Event Planners</div>
-      </div>
-    </div>
+                <div className="row mb-2">
+                  <div className="col-md-4">
+                    <strong>Display Name:</strong>
+                    <div>{customer.display_name || 'N/A'}</div>
+                  </div>
+                  <div className="col-md-4">
+                    <strong>Owner Name:</strong>
+                    <div>{customer.owner_name || 'N/A'}</div>
+                  </div>
+                  <div className="col-md-4">
+                    <strong>PAN No.:</strong>
+                    <div>{customer.pan_no || 'N/A'}</div>
+                  </div>
+                </div> 
+                <hr/>
 
-    <div className="row mb-2">
-      <div className="col-md-4">
-        <strong>Display Name:</strong>
-        <div>Global Events</div>
-      </div>
-      <div className="col-md-4">
-        <strong>Owner Name:</strong>
-        <div>Rohan Sharma</div>
-      </div>
-      <div className="col-md-4">
-        <strong>PAN No.:</strong>
-        <div>ABCDE1234F</div>
-      </div>
-    </div> 
-    <hr/>
+                <div className="mt-3">
+                  <h5>Registered Address:</h5>
+                  <hr/>
+                  <div>{customer.address || 'No registered address'}</div>
+                </div>
+              </div>
+              <hr/>
+              
+              {/* GST Details Table */}
+              <div className="mb-4">
+                <h5>GST Details</h5>
+                <hr/>
+                <div className="table-responsive">
+                  <table className="table table-hover table-bordered align-middle">
+                    <thead className="table-light">
+                      <tr>
+                        <th>GST Number</th>
+                        <th>Place of Supply</th>
+                        <th>Registered Address</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {gstDetails.length > 0 ? (
+                        gstDetails.map((gst, index) => (
+                          <tr key={index}>
+                            <td>{gst.gst_number || 'N/A'}</td>
+                            <td>{gst.place_of_supply || 'N/A'}</td>
+                            <td>{gst.registered_address || 'N/A'}</td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="3" className="text-center">No GST details available</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <hr/>
+              
+              {/* Shipping Address Table */}
+              <div>
+                <h5>Shipping Addresses</h5>
+                <hr/>
+                <div className="table-responsive">
+                  <table className="table table-hover table-bordered align-middle">
+                    <thead className="table-light">
+                      <tr>
+                        <th>Address</th>
+                        <th>City</th>
+                        <th>State</th>
+                        <th>Pincode</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {addresses.length > 0 ? (
+                        addresses.map((address, index) => (
+                          <tr key={index}>
+                            <td>{address.address || 'N/A'}</td>
+                            <td>{address.city || 'N/A'}</td>
+                            <td>{address.state || 'N/A'}</td>
+                            <td>{address.pincode || 'N/A'}</td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="4" className="text-center">No shipping addresses available</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </Tab>
 
-    <div className="mt-3">
-      <h5>Registered Address:</h5>
-      <hr/>
-      <div>1 Corporate Towers, MG Road, Bangalore, 560001</div>
-    </div>
-  </div>
-  <hr/>
-  {/* GST Details Table */}
-  <div className="mb-4">
-    <h5>GST Details</h5>
-    <hr/>
-    <div className="table-responsive">
-      <table className="table table-hover table-bordered align-middle">
-        <thead className="table-light">
-          <tr>
-            <th>GST Number</th>
-            <th>Place of Supply</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>29ABCDE1234F1Z5</td>
-            <td>Karnataka</td>
-          </tr>
-          <tr>
-            <td>27FGHIJ5678K1Z9</td>
-            <td>Maharashtra</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-<hr/>
-  {/* Shipping Address Table */}
-  <div>
-    <h5>Shipping Addresses</h5>
-    <hr/>
-    <div className="table-responsive">
-      <table className="table table-hover table-bordered align-middle">
-        <thead className="table-light">
-          <tr>
-            <th>Address</th>
-            <th>City</th>
-            <th>State</th>
-            <th>Pincode</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Unit 10, Tech Park, Whitefield</td>
-            <td>Bangalore</td>
-            <td>Karnataka</td>
-            <td>560066</td>
-          </tr>
-          <tr>
-            <td>5th Floor, Trade Center, BKC</td>
-            <td>Mumbai</td>
-            <td>Maharashtra</td>
-            <td>400051</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-</Tab>
+            <Tab
+              eventKey="contacts"
+              title={
+                <div className="d-inline-flex align-items-center">
+                  <FaEnvelope className="me-2" />
+                  <span>Contacts</span>
+                </div>
+              }
+            >
+              <div className="pt-3 px-2">
+                <h6 className="fw-semibold mb-2">All Contacts</h6>
+                <hr className="my-2" />
+                {contactPersons.length > 0 ? (
+                  <div className="table-responsive">
+                    <table className="table table-hover table-bordered align-middle">
+                      <thead className="table-light">
+                        <tr>
+                          <th>Name</th>
+                          <th>Designation</th>
+                          <th>Work Email</th>
+                          <th>Work Phone</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {contactPersons.map((person, index) => (
+                          <tr key={index}>
+                            <td>{person.contact_name || 'N/A'}</td>
+                            <td>{person.designation || 'N/A'}</td>
+                            <td>{person.work_email || 'N/A'}</td>
+                            <td>{person.work_phone || 'N/A'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <p className="text-muted mb-0">No contacts found.</p>
+                )}
+              </div>
+            </Tab>
 
+            <Tab
+              eventKey="projects"
+              title={
+                <div className="d-inline-flex align-items-center">
+                  <FaProjectDiagram className="me-2" />
+                  <span>Projects</span>
+                </div>
+              }
+            >
+              <div className="pt-3 px-2">
+                <h6 className="fw-semibold mb-3">Projects</h6>
+                <div className="table-responsive">
+                  <table className="table table-hover table-bordered align-middle">
+                    <thead className="table-light">
+                      <tr>
+                        <th>Project Name</th>
+                        <th>Start Date</th>
+                        <th>End Date</th>
+                        <th>Value</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td colSpan="5" className="text-center">No projects found</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </Tab>
 
-          <Tab
-  eventKey="contacts"
-  title={
-    <div className="d-inline-flex align-items-center">
-      <FaEnvelope className="me-2" />
-      <span>Contacts</span>
-    </div>
-  }
->
-  <div className="pt-3 px-2">
-    <h6 className="fw-semibold mb-2">All Contacts</h6>
-    <hr className="my-2" />
-    <p className="text-muted mb-0">No additional contacts found.</p>
-  </div>
-</Tab>
+            <Tab
+              eventKey="invoices"
+              title={
+                <span className="d-inline-flex align-items-center">
+                  <FaFileInvoice className="me-2" />
+                  Invoices
+                </span>
+              }
+            >
+              <div className="pt-3 px-2">
+                <h6 className="fw-semibold mb-3">Invoices</h6>
+                <div className="table-responsive">
+                  <table className="table table-hover table-bordered align-middle">
+                    <thead className="table-light">
+                      <tr>
+                        <th>Invoice ID</th>
+                        <th>Issue Date</th>
+                        <th>Due Date</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td colSpan="5" className="text-center">No invoices found</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </Tab>
 
-
-           <Tab
-  eventKey="projects"
-  title={
-    <div className="d-inline-flex align-items-center">
-      <FaProjectDiagram className="me-2" />
-      <span>Projects</span>
-    </div>
-  }
->
-  <div className="pt-3 px-2">
-    <h6 className="fw-semibold mb-3">Projects</h6>
-    <div className="table-responsive">
-      <table className="table table-hover table-bordered align-middle">
-        <thead className="table-light">
-          <tr>
-            <th>Project Name</th>
-            <th>Start Date</th>
-            <th>End Date</th>
-            <th>Value</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Anjali & Rohan Wedding</td>
-            <td>2025-06-10</td>
-            <td>2025-06-12</td>
-            <td>₹1,20,000</td>
-            <td>
-              <span className="badge bg-success">Completed</span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-</Tab>
-
-
-          <Tab
-  eventKey="invoices"
-  title={
-    <span className="d-inline-flex align-items-center">
-      <FaFileInvoice className="me-2" />
-      Invoices
-    </span>
-  }
->
-  <div className="pt-3 px-2">
-    <h6 className="fw-semibold mb-3">Invoices</h6>
-    <div className="table-responsive">
-      <table className="table table-hover table-bordered align-middle">
-        <thead className="table-light">
-          <tr>
-            <th>Invoice ID</th>
-            <th>Issue Date</th>
-            <th>Due Date</th>
-            <th>Amount</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>INV-002</td>
-            <td>2025-06-15</td>
-            <td>2025-07-15</td>
-            <td>₹1,20,000</td>
-            <td>
-              <span className="badge bg-success">Paid</span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-</Tab>
-
-
-           <Tab
-  eventKey="estimates"
-  title={
-    <span className="d-inline-flex align-items-center">
-      <FaClipboardList className="me-2" />
-      Estimates
-    </span>
-  }
->
-  <div className="pt-3 px-2">
-    <h6 className="fw-semibold mb-3">Estimates</h6>
-    <div className="table-responsive">
-      <table className="table table-hover table-bordered align-middle">
-        <thead className="table-light">
-          <tr>
-            <th>Estimate ID</th>
-            <th>Date</th>
-            <th>Amount</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>EST-010</td>
-            <td>2025-06-05</td>
-            <td>₹1,20,000</td>
-            <td><span className="badge bg-warning text-dark">Pending</span></td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-</Tab>
-
+            <Tab
+              eventKey="estimates"
+              title={
+                <span className="d-inline-flex align-items-center">
+                  <FaClipboardList className="me-2" />
+                  Estimates
+                </span>
+              }
+            >
+              <div className="pt-3 px-2">
+                <h6 className="fw-semibold mb-3">Estimates</h6>
+                <div className="table-responsive">
+                  <table className="table table-hover table-bordered align-middle">
+                    <thead className="table-light">
+                      <tr>
+                        <th>Estimate ID</th>
+                        <th>Date</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td colSpan="4" className="text-center">No estimates found</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </Tab>
 
             <Tab eventKey="payments" title={<span> <div className="d-inline-flex align-items-center"><FaMoneyBillWave className="me-1" />Payments</div></span>}>
               <p>Payment history for this customer.</p>
@@ -446,386 +520,373 @@ export default function Customerdetail() {
           </Tabs>
         </div>
        
-       <Modal show={showEditModal} onHide={() => setShowEditModal(false)} size="lg" centered scrollable>
-    <Modal.Header closeButton>
-          <Modal.Title className="fw-bold">Edit Customer</Modal.Title>
-        </Modal.Header>
-        <hr/>
-       {/* Login Toggle */}
-           <Card
-  className="mb-4 p-3 shadow-sm border rounded bg-light"
-  style={{ maxWidth: '720px',marginLeft:"40px" }} // Optional: center with margin: '0 auto'
->
-  {/* First Row: Login toggle and Organization */}
-  <Row className="mb-3">
-    {/* Login Toggle */}
-    <Col md={6} className="d-flex align-items-center">
-      <Form.Label className="fw-semibold mb-0 me-3">
-        Login is enabled
-      </Form.Label>
-      <Form.Check
-        type="switch"
-        id="login-switch"
-        checked={loginEnabled}
-        onChange={(e) => setLoginEnabled(e.target.checked)}
-      />
-    </Col>
+        {/* Edit Customer Modal */}
+        <Modal show={showEditModal} onHide={() => setShowEditModal(false)} size="lg" centered scrollable>
+          <Modal.Header closeButton>
+            <Modal.Title className="fw-bold">Edit Customer</Modal.Title>
+          </Modal.Header>
+          <hr />
 
-    {/* Organization Dropdown */}
-    <Col md={6}>
-      <Form.Label className="fw-semibold">
-        Organization <span className="text-danger">*</span>
-      </Form.Label>
-      <Form.Select
-        value={organization}
-        onChange={(e) => setOrganization(e.target.value)}
-      >
-        <option value="">Select Organization</option>
-        <option value="Bangalore Branch">Bangalore Branch</option>
-        <option value="Kochi Branch">Kochi Branch</option>
-        <option value="Calicut Branch">Calicut Branch</option>
-      </Form.Select>
-    </Col>
-  </Row>
+          {/* Login & Organization Section */}
+          <Card className="mb-4 p-3 shadow-sm border rounded bg-light" style={{ maxWidth: '720px', marginLeft: '40px' }}>
+            <Row className="mb-3">
+              <Col md={6} className="d-flex align-items-center">
+                <Form.Label className="fw-semibold mb-0 me-3">Login is enabled</Form.Label>
+                <Form.Check
+                  type="switch"
+                  id="login-switch"
+                  checked={loginEnabled}
+                  onChange={(e) => setLoginEnabled(e.target.checked)}
+                />
+              </Col>
 
-  {/* Second Row: Username and Password */}
-  <Row>
-    <Col md={6}>
-      <Form.Group className="mb-3">
-        <Form.Label className="fw-semibold">
-          Username <span className="text-danger">*</span>
-        </Form.Label>
-        <Form.Control
-          type="text"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          placeholder="Enter username"
-        />
-      </Form.Group>
-    </Col>
+              <Col md={6}>
+                <Form.Label className="fw-semibold">Organization <span className="text-danger">*</span></Form.Label>
+                <Form.Select value={organization} onChange={(e) => setOrganization(e.target.value)}>
+                  <option value="">Select Organization</option>
+                  <option>Bangalore Organization</option>
+                  <option>Kochi Organization</option>
+                  <option>Calicut Organization</option>
+                </Form.Select>
+              </Col>
+            </Row>
 
-    <Col md={6}>
-      <Form.Group className="mb-3">
-        <Form.Label className="fw-semibold">
-          Password <span className="text-danger">*</span>
-        </Form.Label>
-        <Form.Control
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Enter password"
-        />
-      </Form.Group>
-    </Col>
-  </Row>
-</Card>
+            <Row>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label className="fw-semibold">Username <span className="text-danger">*</span></Form.Label>
+                  <Form.Control
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="Enter username"
+                   
+                  />
+                </Form.Group>
+              </Col>
 
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label className="fw-semibold">Password <span className="text-danger">*</span></Form.Label>
+                  <Form.Control
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Enter password"
+                    disabled={!loginEnabled}
+                  />
+                </Form.Group>
+              </Col>
+            </Row>
+          </Card>
 
-
-           
-          <Modal.Body>
-              <Accordion activeKey={activeKey} onSelect={(k) => setActiveKey(k)}>
+          {/* Modal Body */}
+        <Modal.Body>
+        <Accordion defaultActiveKey="0" alwaysOpen>
           {/* Primary Details */}
-          <Card className="mb-3">
-            <CustomAccordionToggle eventKey="0">Primary Details</CustomAccordionToggle>
+          <Card>
+            <CustomAccordionToggle eventKey="0" icon={<FaUserTie />}>
+              Primary Details
+            </CustomAccordionToggle>
             <Accordion.Collapse eventKey="0">
               <Card.Body>
-               <CustomerProfileForm/>
+                <CustomerProfiles
+                  customer={customer}
+                  setCustomer={setCustomer}
+                />
               </Card.Body>
             </Accordion.Collapse>
           </Card>
 
           {/* GST Details */}
-       <Card className="mb-3">
-  <CustomAccordionToggle eventKey="1">GST Details</CustomAccordionToggle>
-  <Accordion.Collapse eventKey="1">
-    <Card.Body>
-      <Form>
-        {gstDetails.map((gst, index) => (
-          <div key={index} className="mb-3 p-3 border rounded">
-            <Row>
-              <Col md={6}>
-                <Form.Group className="mb-3">
-                  <Form.Label>GST No.</Form.Label>
-                  <Form.Control
-                    type="text"
-                    placeholder="Enter GST number"
-                    value={gst.gstNo}
-                    onChange={(e) => handleInputChange(index, 'gstNo', e.target.value)}
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={6}>
-                <Form.Group className="mb-3">
-                  <Form.Label>Place of Supply</Form.Label>
-                  <Form.Control
-                    type="text"
-                    placeholder="Enter place of supply"
-                    value={gst.placeOfSupply}
-                    onChange={(e) => handleInputChange(index, 'placeOfSupply', e.target.value)}
-                  />
-                </Form.Group>
-              </Col>
-            </Row>
-            <Button
-              variant="outline-danger"
-              size="sm"
-              onClick={() => handleRemoveGst(index)}
-              className="mt-2"
-            >
-              Delete
-            </Button>
-          </div>
-        ))}
-
-        <Button
-          variant="outline-primary"
-          onClick={handleAddGst}
-          className="mt-2"
-        >
-          + Add GST Number
-        </Button>
-      </Form>
-    </Card.Body>
-  </Accordion.Collapse>
-</Card>
-
+          <Card>
+            <CustomAccordionToggle eventKey="1" icon={<FaFileInvoice />}>
+              GST Details
+            </CustomAccordionToggle>
+            <Accordion.Collapse eventKey="1">
+              <Card.Body>
+                {gstDetails.map((gst, index) => (
+                  <div key={index} className="mb-3 p-3 border rounded">
+                    <Row>
+                      <Col md={6}>
+                        <Form.Group>
+                          <Form.Label>GST No.</Form.Label>
+                          <Form.Control
+                            value={gst.gst_number}
+                            onChange={(e) =>
+                              handleGstChange(index, 'gst_number', e.target.value)
+                            }
+                          />
+                        </Form.Group>
+                      </Col>
+                      <Col md={6}>
+                        <Form.Group>
+                          <Form.Label>Place of Supply</Form.Label>
+                          <Form.Control
+                            value={gst.place_of_supply}
+                            onChange={(e) =>
+                              handleGstChange(index, 'place_of_supply', e.target.value)
+                            }
+                          />
+                        </Form.Group>
+                      </Col>
+                    </Row>
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      onClick={() => {
+                        const updated = [...gstDetails];
+                        updated.splice(index, 1);
+                        setGstDetails(updated);
+                      }}
+                    >
+                      <FaTrash /> 
+                    </Button>
+                  </div>
+                ))}
+                <Button
+                  onClick={() =>
+                    setGstDetails([...gstDetails, { gst_number: '', place_of_supply: '' }])
+                  }
+                >
+                  + Add GST
+                </Button>
+              </Card.Body>
+            </Accordion.Collapse>
+          </Card>
 
           {/* Shipping Addresses */}
-         <Card className="mb-3">
-  <CustomAccordionToggle eventKey="2">Shipping Addresses</CustomAccordionToggle>
-  <Accordion.Collapse eventKey="2">
-    <Card.Body>
-      {/* Existing addresses */}
-      {addresses.map((address, index) => (
-        <div key={index} className="mb-3 p-3 border rounded">
-          <Row className="align-items-center mb-2">
-            <Col md={12}>
-              <div className="fw-semibold">Address:</div>
-              <div>{address.address}</div>
-            </Col>
-          </Row>
-          <Row className="align-items-center">
-            <Col md={3}>
-              <div className="fw-semibold">City:</div>
-              <div>{address.city}</div>
-            </Col>
-            <Col md={3}>
-              <div className="fw-semibold">State:</div>
-              <div>{address.state}</div>
-            </Col>
-            <Col md={3}>
-              <div className="fw-semibold">Pincode:</div>
-              <div>{address.pincode}</div>
-            </Col>
-            <Col md={3}>
-              <Button
-                variant="link"
-                className="text-danger"
-                onClick={() => handleRemoveAddress(index)}
-              >
-                <FaTrash />
-              </Button>
-            </Col>
-          </Row>
-        </div>
-      ))}
+          <Card>
+            <CustomAccordionToggle eventKey="2" icon={<FaClipboardList />}>
+              Shipping Addresses
+            </CustomAccordionToggle>
+            <Accordion.Collapse eventKey="2">
+              <Card.Body>
+                {addresses.map((address, index) => (
+                  <div key={index} className="mb-3 p-3 border rounded">
+                    <Row>
+                      <Col md={12}>
+                        <Form.Group>
+                          <Form.Label>Address</Form.Label>
+                          <Form.Control
+                            value={address.address}
+                            onChange={(e) =>
+                              handleAddressEdit(index, 'address', e.target.value)
+                            }
+                          />
+                        </Form.Group>
+                      </Col>
+                    </Row>
+                    <Row>
+                      <Col md={4}>
+                        <Form.Group>
+                          <Form.Label>City</Form.Label>
+                          <Form.Control
+                            value={address.city}
+                            onChange={(e) =>
+                              handleAddressEdit(index, 'city', e.target.value)
+                            }
+                          />
+                        </Form.Group>
+                      </Col>
+                      <Col md={4}>
+                        <Form.Group>
+                          <Form.Label>State</Form.Label>
+                          <Form.Control
+                            value={address.state}
+                            onChange={(e) =>
+                              handleAddressEdit(index, 'state', e.target.value)
+                            }
+                          />
+                        </Form.Group>
+                      </Col>
+                      <Col md={4}>
+                        <Form.Group>
+                          <Form.Label>Pincode</Form.Label>
+                          <Form.Control
+                            value={address.pincode}
+                            onChange={(e) =>
+                              handleAddressEdit(index, 'pincode', e.target.value)
+                            }
+                          />
+                        </Form.Group>
+                      </Col>
+                    </Row>
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      onClick={() => {
+                        const updated = [...addresses];
+                        updated.splice(index, 1);
+                        setAddresses(updated);
+                      }}
+                    >
+                      <FaTrash /> 
+                    </Button>
+                  </div>
+                ))}
 
-      {/* Add new address form */}
-      {showForm ? (
-        <div className="mb-3 p-3 border rounded">
-          <Row className="mb-2">
-            <Col md={12}>
-              <Form.Group>
-                <Form.Label>Address</Form.Label>
-                <Form.Control
-                  type="text"
-                  value={newAddress.address}
-                  onChange={(e) => handleInputChange('address', e.target.value)}
-                />
-              </Form.Group>
-            </Col>
-          </Row>
-                    <Row className="align-items-end">
-            <Col style={{ width: '25%' }}>
-                <Form.Group>
-                <Form.Label>City</Form.Label>
-                <Form.Control
-                    type="text"
-                    value={newAddress.city}
-                    onChange={(e) => handleInputChange('city', e.target.value)}
-                />
-                </Form.Group>
-            </Col>
-            <Col style={{ width: '25%' }}>
-                <Form.Group>
-                <Form.Label>State</Form.Label>
-                <Form.Control
-                    type="text"
-                    value={newAddress.state}
-                    onChange={(e) => handleInputChange('state', e.target.value)}
-                />
-                </Form.Group>
-            </Col>
-            <Col style={{ width: '25%' }}>
-                <Form.Group>
-                <Form.Label>Pincode</Form.Label>
-                <Form.Control
-                    type="text"
-                    value={newAddress.pincode}
-                    onChange={(e) => handleInputChange('pincode', e.target.value)}
-                />
-                </Form.Group>
-            </Col>
-            <Col style={{ width: '15%' }}>
-                <Button
-                variant="link"
-                className="text-danger mt-4"
-                onClick={() => setShowForm(false)}
-                >
-                <FaTrash />
-                </Button>
-            </Col>
-            </Row>
-
-        </div>
-      ) : (
-        <Button
-          variant="outline-primary"
-          onClick={handleAddClicks}
-          className="mt-2"
-        >
-          + Add Shipping Address
-        </Button>
-      )}
-    </Card.Body>
-  </Accordion.Collapse>
-</Card>
-
+                {showForm ? (
+                  <div className="mb-3 p-3 border rounded">
+                    <Row>
+                      <Col md={12}>
+                        <Form.Group>
+                          <Form.Label>Address</Form.Label>
+                          <Form.Control
+                            value={newAddress.address}
+                            onChange={(e) =>
+                              setNewAddress({ ...newAddress, address: e.target.value })
+                            }
+                          />
+                        </Form.Group>
+                      </Col>
+                    </Row>
+                    <Row>
+                      <Col md={4}>
+                        <Form.Group>
+                          <Form.Label>City</Form.Label>
+                          <Form.Control
+                            value={newAddress.city}
+                            onChange={(e) =>
+                              setNewAddress({ ...newAddress, city: e.target.value })
+                            }
+                          />
+                        </Form.Group>
+                      </Col>
+                      <Col md={4}>
+                        <Form.Group>
+                          <Form.Label>State</Form.Label>
+                          <Form.Control
+                            value={newAddress.state}
+                            onChange={(e) =>
+                              setNewAddress({ ...newAddress, state: e.target.value })
+                            }
+                          />
+                        </Form.Group>
+                      </Col>
+                      <Col md={4}>
+                        <Form.Group>
+                          <Form.Label>Pincode</Form.Label>
+                          <Form.Control
+                            value={newAddress.pincode}
+                            onChange={(e) =>
+                              setNewAddress({ ...newAddress, pincode: e.target.value })
+                            }
+                          />
+                        </Form.Group>
+                      </Col>
+                    </Row>
+                    <Button variant="success" onClick={handleAddNewAddress}>
+                      Save Address
+                    </Button>
+                    <Button variant="link" onClick={() => setShowForm(false)}>
+                      Cancel
+                    </Button>
+                  </div>
+                ) : (
+                  <Button onClick={() => setShowForm(true)}>+ Add Address</Button>
+                )}
+              </Card.Body>
+            </Accordion.Collapse>
+          </Card>
 
           {/* Contact Persons */}
-         <Card className="mb-3">
-  <CustomAccordionToggle eventKey="3">Contact Persons</CustomAccordionToggle>
-  <Accordion.Collapse eventKey="3">
-    <Card.Body>
-      <Form>
-        {contactPersons.map((person, index) => (
-          <div key={index} className="mb-4 p-3 border rounded">
-            {/* Row 1: Name & Designation */}
-            <Row className="mb-3">
-              <Col md={6}>
-                <Form.Group>
-                  <Form.Label>Contact Name</Form.Label>
-                  <Form.Control
-                    type="text"
-                    value={person.name}
-                    onChange={(e) => handleContactChange(index, 'name', e.target.value)}
-                    placeholder="Enter contact name"
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={6}>
-                <Form.Group>
-                  <Form.Label>Designation</Form.Label>
-                  <Form.Control
-                    type="text"
-                    value={person.designation}
-                    onChange={(e) => handleContactChange(index, 'designation', e.target.value)}
-                    placeholder="Enter designation"
-                  />
-                </Form.Group>
-              </Col>
-            </Row>
-
-            {/* Row 2: Work Email & Work Phone */}
-            <Row className="mb-3">
-              <Col md={6}>
-                <Form.Group>
-                  <Form.Label>Work Email</Form.Label>
-                  <Form.Control
-                    type="email"
-                    value={person.workEmail}
-                    onChange={(e) => handleContactChange(index, 'workEmail', e.target.value)}
-                    placeholder="Enter work email"
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={6}>
-                <Form.Group>
-                  <Form.Label>Work Phone</Form.Label>
-                  <Form.Control
-                    type="text"
-                    value={person.workPhone}
-                    onChange={(e) => handleContactChange(index, 'workPhone', e.target.value)}
-                    placeholder="Enter work phone"
-                  />
-                </Form.Group>
-              </Col>
-            </Row>
-
-            {/* Row 3: Personal Email & Personal Phone */}
-            <Row className="mb-3">
-              <Col md={6}>
-                <Form.Group>
-                  <Form.Label>Personal Email</Form.Label>
-                  <Form.Control
-                    type="email"
-                    value={person.personalEmail}
-                    onChange={(e) => handleContactChange(index, 'personalEmail', e.target.value)}
-                    placeholder="Enter personal email"
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={6}>
-                <Form.Group>
-                  <Form.Label>Personal Phone</Form.Label>
-                  <Form.Control
-                    type="text"
-                    value={person.personalPhone}
-                    onChange={(e) => handleContactChange(index, 'personalPhone', e.target.value)}
-                    placeholder="Enter personal phone"
-                  />
-                </Form.Group>
-              </Col>
-            </Row>
-
-            {/* Row 4: Delete Icon */}
-            <Row>
-              <Col className="text-end">
+          <Card>
+            <CustomAccordionToggle eventKey="3" icon={<FaUserFriends />}>
+              Contact Persons
+            </CustomAccordionToggle>
+            <Accordion.Collapse eventKey="3">
+              <Card.Body>
+                {contactPersons.map((person, index) => (
+                  <div key={index} className="mb-3 p-3 border rounded">
+                    <Row>
+                      <Col md={6}>
+                        <Form.Group>
+                          <Form.Label>Name</Form.Label>
+                          <Form.Control
+                            value={person.contact_name}
+                            onChange={(e) =>
+                              handleContactChange(index, 'contact_name', e.target.value)
+                            }
+                          />
+                        </Form.Group>
+                      </Col>
+                      <Col md={6}>
+                        <Form.Group>
+                          <Form.Label>Designation</Form.Label>
+                          <Form.Control
+                            value={person.designation}
+                            onChange={(e) =>
+                              handleContactChange(index, 'designation', e.target.value)
+                            }
+                          />
+                        </Form.Group>
+                      </Col>
+                    </Row>
+                    <Row>
+                      <Col md={6}>
+                        <Form.Group>
+                          <Form.Label>Work Email</Form.Label>
+                          <Form.Control
+                            type="email"
+                            value={person.work_email}
+                            onChange={(e) =>
+                              handleContactChange(index, 'work_email', e.target.value)
+                            }
+                          />
+                        </Form.Group>
+                      </Col>
+                      <Col md={6}>
+                        <Form.Group>
+                          <Form.Label>Work Phone</Form.Label>
+                          <Form.Control
+                            value={person.work_phone}
+                            onChange={(e) =>
+                              handleContactChange(index, 'work_phone', e.target.value)
+                            }
+                          />
+                        </Form.Group>
+                      </Col>
+                    </Row>
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      onClick={() => {
+                        const updated = [...contactPersons];
+                        updated.splice(index, 1);
+                        setContactPersons(updated);
+                      }}
+                    >
+                      <FaTrash /> Remove
+                    </Button>
+                  </div>
+                ))}
                 <Button
-                  variant="link"
-                  className="text-danger"
-                  onClick={() => handleRemoveContact(index)}
+                  onClick={() =>
+                    setContactPersons([
+                      ...contactPersons,
+                      {
+                        contact_name: '',
+                        designation: '',
+                        work_email: '',
+                        work_phone: ''
+                      }
+                    ])
+                  }
                 >
-                  <FaTrash />
+                  + Add Contact
                 </Button>
-              </Col>
-            </Row>
-          </div>
-        ))}
-
-        {/* Add Button */}
-        <Button variant="outline-primary" onClick={handleAddContact}>
-          + Add Contact Person
-        </Button>
-      </Form>
-    </Card.Body>
-  </Accordion.Collapse>
-</Card>
-
+              </Card.Body>
+            </Accordion.Collapse>
+          </Card>
         </Accordion>
       </Modal.Body>
 
-      <Modal.Footer style={{backgroundColor:"#f8f9fa"}}>
-        <Button variant="secondary" onClick={() => setShowCustomerModal(false)}>
-          Cancel
-        </Button>
-        <Button variant="primary">
-          Edit Customer
-        </Button>
-      </Modal.Footer>
-  
-   </Modal>
+          <Modal.Footer style={{ backgroundColor: "#f8f9fa" }}>
+            <Button variant="secondary" onClick={() => setShowEditModal(false)}>Cancel</Button>
+            <Button variant="primary" onClick={handleUpdateCustomer}>Edit Customer</Button>
+          </Modal.Footer>
+        </Modal>
       </Container>
     </div>
   );

@@ -1,6 +1,6 @@
 import React, { useState,useContext,useEffect,useRef } from 'react';
 import { Container, Row, Col, Button, Modal,Tabs,Tab,AccordionContext, Form, Accordion,useAccordionButton,Card } from 'react-bootstrap';
-import { FaUsers, FaUserFriends, FaUserTie, FaUser,FaTrash, FaPhone,FaUpload, FaDollarSign, FaCertificate, FaFileAlt, FaBuilding} from 'react-icons/fa';
+import { FaUsers, FaUserFriends, FaUserTie,FaPlus, FaUser,FaTrash, FaPhone,FaUpload, FaDollarSign, FaCertificate, FaFileAlt, FaBuilding} from 'react-icons/fa';
 import { BsChevronRight, BsChevronDown } from "react-icons/bs";
 import { useNavigate,useLocation } from 'react-router-dom';
 import StaffDetails from './StaffDetails';
@@ -17,6 +17,10 @@ import CustomerTable from './CustomerTable';
 import VendorCards from './VendorCards';
 import VendorTable from './VendorTable';
 import { toast } from 'react-toastify';
+import Staffdeta from './staffdeta';
+import FinancialHRs from './FinanicialHrs';
+import ContactForms from './ContactForms';
+import Skill from './Skill';
 function CustomAccordionToggle({ children, eventKey, icon }) {
   const { activeEventKey } = useContext(AccordionContext);
   const decoratedOnClick = useAccordionButton(eventKey);
@@ -86,6 +90,7 @@ const [loginEnabled, setLoginEnabled] = useState(false);
 const [organization, setOrganization] = useState('');
 
 const [staffFormData, setStaffFormData] = useState({
+  organization:'',
   salutation: '', firstName: '', lastName: '', staffId: '',
   staffType: '', designation: '', status: '', dob: '',
   bloodGroup: '', joiningDate: '', natureOfStaff: '',
@@ -120,6 +125,18 @@ const [isSticky, setIsSticky] = useState(false);
 const fileInputRef = useRef(null);
 const [profileImage, setProfileImage] = useState(null);
 const [newAddress, setNewAddress] = useState({ address: '', city: '', state: '', pincode: '' });
+const resetVendorForm = () => {
+  setLoginEnabled(false);
+  setOrganization('');
+  setSalutation('Mr.');
+  setVendorName('');
+  setVendorPhone('');
+  setVendorEmail('');
+  setGstNo('');
+  setVendorType('Material');
+  setVendorAddress('');
+  setContacts([]);
+};
 
 const uploadFields = [
   { id: 'cv-upload', label: 'CV', key: 'resume' },
@@ -156,7 +173,7 @@ const handleAddClick = () => {
   };
 const handleSaveVendor = async () => {
   const vendorData = {
-    salutation: salutation, // You'll need to store this in useState
+    salutation: salutation,
     name: vendorName,
     phone: vendorPhone,
     email: vendorEmail,
@@ -164,21 +181,34 @@ const handleSaveVendor = async () => {
     type: vendorType,
     address: vendorAddress,
     organization: organization,
-    login: loginEnabled,
+    login_enabled: loginEnabled,
     contact_persons: contacts.map(c => ({
-  name: c.name,
-  designation: c.designation,
-  work_email: c.email,  // ✅ Correct DB column name
-  work_phone: c.phone   // ✅ Correct DB column name
-   }))
-
+      name: c.name,
+      designation: c.designation,
+      work_email: c.email,
+      work_phone: c.phone
+    }))
   };
 
   try {
     const response = await axios.post('http://127.0.0.1:8000/api/v1/vendors', vendorData);
-   toast.success("Vendor added successfully!");
+    toast.success("Vendor added successfully!");
     setShowVendorModal(false);
-    // Optionally refresh vendor list
+
+    // ✅ Clear input fields
+    setSalutation('');
+    setVendorName('');
+    setVendorPhone('');
+    setVendorEmail('');
+    setGstNo('');
+    setVendorType('');
+    setVendorAddress('');
+    setOrganization('');
+    setLoginEnabled(false);
+    setContacts([]); // or initial default contact structure if needed
+
+    // ✅ Navigate to /vendor
+    navigate('/vendor');
   } catch (error) {
     console.error("Failed to add vendor:", error.response?.data || error.message);
     toast.error("Failed to save vendor. Please check your input.");
@@ -331,7 +361,7 @@ const handleSave = async () => {
     });
 
     // Optional Previous Employment Info
-    formData.append('position', staffFormData.position || '');
+    formData.append('position', staffFormData.designation || '');
     formData.append('department', staffFormData.department || '');
     formData.append('previous_company', staffFormData.previousCompany || '');
     formData.append('previous_position', staffFormData.previousPosition || '');
@@ -354,10 +384,11 @@ const handleSave = async () => {
       toast.success('Staff saved successfully!');
       setShowStaffModal(false);
     } else {
-      console.error(result.errors);
+      console.error(result.error);
       toast.error(result.message || 'Failed to save staff');
     }
   } catch (error) {
+    console.log(error);
     console.error('Save error:', error);
     toast.error('Something went wrong');
   }
@@ -369,63 +400,99 @@ const handleSubmit = async (e) => {
   setLoading(true);
 
   try {
-    // Prepare customer data
     const formData = new FormData();
-    
-    // Append basic customer info
+
+    // ✅ Required Fields
+    formData.append('customer_type', customerType); 
+    formData.append('display_name', displayName);   
+    formData.append('primary_contact_name', contactName); 
+    formData.append('primary_contact_phone', contactPhone);
+
+    // ✅ Optional Fields
     formData.append('organization', organization);
-    formData.append('login_enabled', loginEnabled);
-    
-    // Append contact persons
+    formData.append('login_enabled', loginEnabled ? '1' : '0');
+    formData.append('company_name', companyName || '');
+    formData.append('owner_name', ownerName || '');
+    formData.append('email', email || '');
+    formData.append('pan_no', pan || '');
+
+    // ✅ Contact Persons
     contactPersons.forEach((person, index) => {
-      formData.append(`contact_persons[${index}][contact_name]`, person.name);
-      formData.append(`contact_persons[${index}][designation]`, person.designation);
-      formData.append(`contact_persons[${index}][work_email]`, person.workEmail);
-      formData.append(`contact_persons[${index}][work_phone]`, person.workPhone);
-      formData.append(`contact_persons[${index}][personal_email]`, person.personalEmail);
-      formData.append(`contact_persons[${index}][personal_phone]`, person.personalPhone);
+      formData.append(`contact_persons[${index}][contact_name]`, person.name || '');
+      formData.append(`contact_persons[${index}][designation]`, person.designation || '');
+      formData.append(`contact_persons[${index}][work_email]`, person.workEmail || '');
+      formData.append(`contact_persons[${index}][work_phone]`, person.workPhone || '');
+      formData.append(`contact_persons[${index}][personal_email]`, person.personalEmail || '');
+      formData.append(`contact_persons[${index}][personal_phone]`, person.personalPhone || '');
     });
 
-    // Append GST details
+    // ✅ GST Details
     gstDetails.forEach((gst, index) => {
-      formData.append(`gst_details[${index}][gst_number]`, gst.gstNo);
-      formData.append(`gst_details[${index}][place_of_supply]`, gst.placeOfSupply);
+      formData.append(`gst_details[${index}][gst_number]`, gst.gstNo || '');
+      formData.append(`gst_details[${index}][place_of_supply]`, gst.placeOfSupply || '');
+      formData.append(`gst_details[${index}][registered_address]`, gst.registeredAddress || '');
     });
 
-    // Append addresses
+    // ✅ Shipping Addresses
     addresses.forEach((address, index) => {
-      formData.append(`shipping_addresses[${index}][address]`, address.address);
-      formData.append(`shipping_addresses[${index}][city]`, address.city);
-      formData.append(`shipping_addresses[${index}][state]`, address.state);
-      formData.append(`shipping_addresses[${index}][pincode]`, address.pincode);
+      formData.append(`shipping_addresses[${index}][address]`, address.address || '');
+      formData.append(`shipping_addresses[${index}][city]`, address.city || '');
+      formData.append(`shipping_addresses[${index}][state]`, address.state || '');
+      formData.append(`shipping_addresses[${index}][pincode]`, address.pincode || '');
     });
 
-    // Append files if any
+    // ✅ Profile Logo Upload
     if (profileImage) {
       formData.append('profile_logo', profileImage);
     }
 
-    const response = await fetch('http://127.0.0.1:8000/api/v1/customers', {
-      method: 'POST',
-      body: formData,
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Failed to save customer');
+    // ✅ Debug: Log all formData values
+    for (let pair of formData.entries()) {
+      console.log(`${pair[0]}: ${pair[1]}`);
     }
 
-    const data = await response.json();
+    // ✅ API Call
+    const response = await axios.post(
+      'http://127.0.0.1:8000/api/customer/customer',
+      formData,
+      {
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+
     toast.success('Customer saved successfully!');
+          setCustomerType('');
+      setDisplayName('');
+      setContactName('');
+      setContactPhone('');
+      setOrganization('');
+      setLoginEnabled(false);
+      setCompanyName('');
+      setOwnerName('');
+      setEmail('');
+      setPan('');
+      setContactPersons([]);
+      setGstDetails([]);
+      setAddresses([]);
+      setProfileImage(null);
+
+
+
     setShowCustomerModal(false);
-    
+
   } catch (error) {
-    console.error('Error:', error);
-    toast.error(`Error: ${error.message}`);
+    console.error('Error saving customer:', error);
+    const message = error.response?.data?.message || 'Unknown error';
+    toast.error(`Error: ${message}`);
   } finally {
     setLoading(false);
   }
 };
+
+
 const handleContactChanges = (index, field, value) => {
     const newContacts = [...contacts];
     newContacts[index][field] = value;
@@ -560,14 +627,16 @@ const handleContactChanges = (index, field, value) => {
       Organization <span className="text-danger">*</span>
     </Form.Label>
     <Form.Select
-      value={organization}
-      onChange={(e) => setOrganization(e.target.value)}
-    >
-      <option value="">Select Organization</option>
-      <option value="Kochi Organization">Kochi Organization</option>
-      <option value="Kozhikode Organization">Kozhikode Organization</option>
-      <option value="Trivandrum Organization">Trivandrum Organization</option>
-    </Form.Select>
+  value={organization}
+  onChange={(e) => setOrganization(e.target.value)}
+  required
+>
+  <option value="">Select Organization</option>
+  <option value="Kochi Organization">Kochi Organization</option>
+  <option value="Kozhikode Organization">Kozhikode Organization</option>
+  <option value="Trivandrum Organization">Trivandrum Organization</option>
+</Form.Select>
+
   </div>
 </div>
 
@@ -578,7 +647,7 @@ const handleContactChanges = (index, field, value) => {
             <Accordion.Item eventKey="0">
         <CustomAccordionToggle eventKey="0" icon={<FaUser />}>Staff Details</CustomAccordionToggle>
         <Accordion.Body className="pb-4 ps-4 pe-4">
-            <StaffDetails
+            <Staffdeta
           data={staffFormData}
           setData={setStaffFormData}
         />
@@ -589,14 +658,14 @@ const handleContactChanges = (index, field, value) => {
             <Accordion.Item eventKey="1">
         <CustomAccordionToggle eventKey="1" icon={<FaPhone />}>Contact Information</CustomAccordionToggle>
         <Accordion.Body className="pb-4 ps-4 pe-4">
-            <ContactForm data={contactFormData} setData={setContactFormData}  />
+            <ContactForms data={contactFormData} setData={setContactFormData}  />
         </Accordion.Body>
         </Accordion.Item>
 
                 <Accordion.Item eventKey="2">
             <CustomAccordionToggle eventKey="2" icon={<FaDollarSign />}>Financial & HR Details</CustomAccordionToggle>
             <Accordion.Body className="pb-4 ps-4 pe-4">
-              <FinancialHR
+              <FinancialHRs
                   data={financialFormData}
                   setData={setFinancialFormData}
                 />
@@ -606,7 +675,7 @@ const handleContactChanges = (index, field, value) => {
 
       <Accordion.Item eventKey="3">
         <CustomAccordionToggle eventKey="3" icon={<FaCertificate />}>Skills</CustomAccordionToggle>
-        <Accordion.Body className="pb-4 ps-4 pe-4"> <Skills
+        <Accordion.Body className="pb-4 ps-4 pe-4"> <Skill
         selectedSkills={selectedSkills}
         setSelectedSkills={setSelectedSkills}
       /> </Accordion.Body>
@@ -763,9 +832,11 @@ const handleContactChanges = (index, field, value) => {
                 value={organization}
                 onChange={(e) => setOrganization(e.target.value)}
               >
-                <option value="">Select Organization</option>
-                <option value="org1">Organization 1</option>
-                <option value="org2">Organization 2</option>
+               <option value="">Select Organization</option>
+              <option>Kochi Organization</option>
+              <option>Bangalore Organization</option>
+              <option>Kozhikode Organization</option>
+
               </Form.Select>
             </div>
           </div>
@@ -819,8 +890,8 @@ const handleContactChanges = (index, field, value) => {
                   onChange={(e) => setCustomerType(e.target.value)}
                 >
                   <option value="">Select type</option>
-                  <option value="business">Business</option>
-                  <option value="individual">Individual</option>
+                  <option>Business</option>
+                  <option>Individual</option>
                 </Form.Select>
               </Form.Group>
             </Col>
@@ -909,126 +980,176 @@ const handleContactChanges = (index, field, value) => {
   </Card>
 
   {/* GST Details */}
-  <Card className="mb-3">
-    <CustomAccordionToggle eventKey="1">GST Details</CustomAccordionToggle>
-    <Accordion.Collapse eventKey="1">
-      <Card.Body>
-        <Form>
-          {gstDetails.map((gst, index) => (
-            <div key={index} className="mb-3 p-3 border rounded">
-              <Row>
-                <Col md={4}>
-                  <Form.Group>
-                    <Form.Label>GST No.</Form.Label>
-                    <Form.Control
-                      type="text"
-                      value={gst.gstNo}
-                      onChange={(e) => handleInputChange(index, 'gstNo', e.target.value)}
-                    />
-                  </Form.Group>
-                </Col>
-                <Col md={4}>
-                  <Form.Group>
-                    <Form.Label>Place of Supply</Form.Label>
-                    <Form.Control
-                      type="text"
-                      value={gst.placeOfSupply}
-                      onChange={(e) => handleInputChange(index, 'placeOfSupply', e.target.value)}
-                    />
-                  </Form.Group>
-                </Col>
-               
-              </Row>
-              <Button
-                variant="outline-danger"
-                size="sm"
-                onClick={() => handleRemoveGst(index)}
-                className="mt-2"
-              >
-                Delete
-              </Button>
-            </div>
-          ))}
-          <Button variant="outline-primary" onClick={handleAddGst}>+ Add GST Number</Button>
-        </Form>
-      </Card.Body>
-    </Accordion.Collapse>
-  </Card>
-
-  {/* Shipping Addresses */}
-  <Card className="mb-3">
-    <CustomAccordionToggle eventKey="2">Shipping Addresses</CustomAccordionToggle>
-    <Accordion.Collapse eventKey="2">
-      <Card.Body>
-        {addresses.map((address, index) => (
+ <Card className="mb-3">
+  <CustomAccordionToggle eventKey="1">GST Details</CustomAccordionToggle>
+  <Accordion.Collapse eventKey="1">
+    <Card.Body>
+      <Form>
+        {gstDetails.map((gst, index) => (
           <div key={index} className="mb-3 p-3 border rounded">
-            <Row>
-              <Col md={3}><strong>Address:</strong><div>{address.address}</div></Col>
-              <Col md={2}><strong>City:</strong><div>{address.city}</div></Col>
-              <Col md={2}><strong>State:</strong><div>{address.state}</div></Col>
-              <Col md={2}><strong>Pincode:</strong><div>{address.pincode}</div></Col>
-              <Col md={3}>
-                <Button variant="link" className="text-danger" onClick={() => handleRemoveAddress(index)}>
-                  <FaTrash />
+            <Row className="align-items-end">
+              <Col md={4}>
+                <Form.Group>
+                  <Form.Label>GST No.</Form.Label>
+                  <Form.Control
+                    type="text"
+                    value={gst.gstNo}
+                    onChange={(e) => handleInputChange(index, 'gstNo', e.target.value)}
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={4}>
+                <Form.Group>
+                  <Form.Label>Place of Supply</Form.Label>
+                  <Form.Control
+                    type="text"
+                    value={gst.placeOfSupply}
+                    onChange={(e) => handleInputChange(index, 'placeOfSupply', e.target.value)}
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={4} className="text-end">
+                <Button
+                  variant="link"
+                  className="text-danger mt-2"
+                  onClick={() => handleRemoveGst(index)}
+                >
+                  <FaTrash size={18} /> {/* Import FaTrash from react-icons/fa */}
                 </Button>
               </Col>
             </Row>
           </div>
         ))}
 
-        {showForm && (
-          <div className="mb-3 p-3 border rounded">
-            <Row>
-              <Col md={3}>
-                <Form.Group>
-                  <Form.Label>Address</Form.Label>
-                  <Form.Control
-                    type="text"
-                    value={newAddress.address}
-                    onChange={(e) => handleInputChanges('address', e.target.value)}
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={3}>
-                <Form.Group>
-                  <Form.Label>City</Form.Label>
-                  <Form.Control
-                    type="text"
-                    value={newAddress.city}
-                    onChange={(e) => handleInputChanges('city', e.target.value)}
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={3}>
-                <Form.Group>
-                  <Form.Label>State</Form.Label>
-                  <Form.Control
-                    type="text"
-                    value={newAddress.state}
-                    onChange={(e) => handleInputChanges('state', e.target.value)}
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={3}>
-                <Form.Group>
-                  <Form.Label>Pincode</Form.Label>
-                  <Form.Control
-                    type="text"
-                    value={newAddress.pincode}
-                    onChange={(e) => handleInputChanges('pincode', e.target.value)}
-                  />
-                </Form.Group>
-              </Col>
-            </Row>
-          </div>
-        )}
-
-        <Button variant="outline-primary" onClick={handleAddClicks}>
-          {showForm ? 'Save Address' : '+ Add Shipping Address'}
+        <Button variant="outline-primary" onClick={handleAddGst}>
+          + Add GST Number
         </Button>
-      </Card.Body>
-    </Accordion.Collapse>
-  </Card>
+      </Form>
+    </Card.Body>
+  </Accordion.Collapse>
+</Card>
+
+
+  {/* Shipping Addresses */}
+ <Card className="mb-3">
+  <CustomAccordionToggle eventKey="2">Shipping Addresses</CustomAccordionToggle>
+  <Accordion.Collapse eventKey="2">
+    <Card.Body>
+      {/* Existing addresses */}
+      {addresses.map((address, index) => (
+        <div key={index} className="mb-3 p-3 border rounded">
+          <Row className="mb-2">
+            <Col md={12}>
+              <strong>Address:</strong>
+              <div>{address.address}</div>
+            </Col>
+          </Row>
+          <Row>
+            <Col md={4}><strong>City:</strong><div>{address.city}</div></Col>
+            <Col md={4}><strong>State:</strong><div>{address.state}</div></Col>
+            <Col md={4}><strong>Pincode:</strong><div>{address.pincode}</div></Col>
+          </Row>
+          <Row className="mt-2">
+            <Col className="text-end">
+              <Button 
+                variant="link" 
+                className="text-danger p-0" 
+                onClick={() => handleRemoveAddress(index)}
+              >
+                <FaTrash className="me-1" /> Delete
+              </Button>
+            </Col>
+          </Row>
+        </div>
+      ))}
+
+      {/* Add new address form */}
+      {showForm && (
+        <div className="mb-3 p-3 border rounded">
+          <Row className="mb-3">
+            <Col md={12}>
+              <Form.Group>
+                <Form.Label>Address</Form.Label>
+                <Form.Control
+                  as="textarea"
+                  rows={3}
+                  value={newAddress.address}
+                  onChange={(e) => handleInputChanges('address', e.target.value)}
+                />
+              </Form.Group>
+            </Col>
+          </Row>
+          <Row>
+            <Col md={4}>
+              <Form.Group>
+                <Form.Label>City</Form.Label>
+                <Form.Control
+                  type="text"
+                  value={newAddress.city}
+                  onChange={(e) => handleInputChanges('city', e.target.value)}
+                />
+              </Form.Group>
+            </Col>
+            <Col md={4}>
+              <Form.Group>
+                <Form.Label>State</Form.Label>
+                <Form.Control
+                  type="text"
+                  value={newAddress.state}
+                  onChange={(e) => handleInputChanges('state', e.target.value)}
+                />
+              </Form.Group>
+            </Col>
+            <Col md={4}>
+              <Form.Group>
+                <Form.Label>Pincode</Form.Label>
+                <Form.Control
+                  type="text"
+                  value={newAddress.pincode}
+                  onChange={(e) => handleInputChanges('pincode', e.target.value)}
+                />
+              </Form.Group>
+            </Col>
+          </Row>
+          <Row className="mt-2">
+            <Col className="text-end">
+              <Button 
+                variant="link" 
+                className="text-danger p-0" 
+                onClick={() => setShowForm(false)}
+              >
+                <FaTrash className="me-1" /> 
+              </Button>
+            </Col>
+          </Row>
+        </div>
+      )}
+
+      <div className="d-flex justify-content-between">
+        {!showForm && (
+          <Button 
+            variant="outline-primary" 
+            onClick={handleAddClicks}
+          >
+            <FaPlus className="me-1" /> Add Shipping Address
+          </Button>
+        )}
+        {showForm && (
+          <Button 
+            variant="primary" 
+            onClick={() => {
+              setAddresses([...addresses, newAddress]);
+              setShowForm(false);
+            }}
+          >
+            Save Address
+          </Button>
+        )}
+      </div>
+    </Card.Body>
+  </Accordion.Collapse>
+</Card>
+
 
   {/* Contact Persons */}
   <Card className="mb-3">
@@ -1154,19 +1275,21 @@ const handleContactChanges = (index, field, value) => {
           />
         </div>
         <div style={{ width: '50%' }}>
-          <Form.Group controlId="organization">
-            <Form.Label className="fw-semibold">
-              Organization <span className="text-danger">*</span>
-            </Form.Label>
-            <Form.Select
-              value={organization}
-              onChange={(e) => setOrganization(e.target.value)}
-            >
-              <option value="">Select Organization</option>
-              <option value="org1">Organization 1</option>
-              <option value="org2">Organization 2</option>
-            </Form.Select>
-          </Form.Group>
+         <Form.Group controlId="organization">
+  <Form.Label className="fw-semibold">
+    Organization <span className="text-danger">*</span>
+  </Form.Label>
+  <Form.Select
+    value={organization}
+    onChange={(e) => setOrganization(e.target.value)}
+  >
+    <option value="">Select Organization</option>
+    <option>Kochi Organization</option>
+    <option>Kozhikode Organization</option>
+    <option>Bangalore Organization</option>
+  </Form.Select>
+</Form.Group>
+
         </div>
       </div>
 
@@ -1177,7 +1300,7 @@ const handleContactChanges = (index, field, value) => {
             <CustomAccordionToggle eventKey="0">Vendor Details</CustomAccordionToggle>
             <Accordion.Body>
               <Row className="mb-3">
-                <Col md={3}>
+                <Col md={4}>
                   <Form.Group controlId="salutation">
                     <Form.Label>Salutation<span className="text-danger">*</span></Form.Label>
                     <Form.Select value={salutation} onChange={(e) => setSalutation(e.target.value)}>
@@ -1187,27 +1310,28 @@ const handleContactChanges = (index, field, value) => {
                     </Form.Select>
                   </Form.Group>
                 </Col>
-                <Col md={3}>
+                <Col md={4}>
                   <Form.Group controlId="vendorName">
                     <Form.Label>Name<span className="text-danger">*</span></Form.Label>
                     <Form.Control type="text" value={vendorName} onChange={(e) => setVendorName(e.target.value)} />
                   </Form.Group>
                 </Col>
-                <Col md={3}>
+                <Col md={4}>
                   <Form.Group controlId="vendorPhone">
                     <Form.Label>Phone<span className="text-danger">*</span></Form.Label>
                     <Form.Control type="text" value={vendorPhone} onChange={(e) => setVendorPhone(e.target.value)} />
                   </Form.Group>
                 </Col>
-                <Col md={3}>
+               
+              </Row>
+
+              <Row className="mb-3">
+                 <Col md={4}>
                   <Form.Group controlId="vendorEmail">
                     <Form.Label>Email</Form.Label>
                     <Form.Control type="email" value={vendorEmail} onChange={(e) => setVendorEmail(e.target.value)} />
                   </Form.Group>
                 </Col>
-              </Row>
-
-              <Row className="mb-3">
                 <Col md={4}>
                   <Form.Group controlId="gstNo">
                     <Form.Label>GST No.</Form.Label>
@@ -1223,10 +1347,18 @@ const handleContactChanges = (index, field, value) => {
                     </Form.Select>
                   </Form.Group>
                 </Col>
-                <Col md={4}>
+             
+              </Row>
+              <Row className="mb-3">
+                <Col>
                   <Form.Group controlId="vendorAddress">
                     <Form.Label>Address</Form.Label>
-                    <Form.Control as="textarea" rows={1} value={vendorAddress} onChange={(e) => setVendorAddress(e.target.value)} />
+                    <Form.Control
+                      as="textarea"
+                      rows={2}
+                      value={vendorAddress}
+                      onChange={(e) => setVendorAddress(e.target.value)}
+                    />
                   </Form.Group>
                 </Col>
               </Row>

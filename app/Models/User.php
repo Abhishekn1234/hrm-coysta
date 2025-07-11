@@ -40,10 +40,10 @@ public function leaveRequests()
      *
      * @var list<string>
      */
-  protected $fillable = [
+ protected $fillable = [
     // Basic Info
-    'first_name', 'last_name', 'name', 'user_type', 'email', 'email_verified_at', 'password', 'phone', 'place', 'address', 'gender',
-    
+    'first_name', 'last_name', 'name', 'user_type', 'email', 'email_verified_at', 'password', 'phone', 'place', 'address', 'gender', 'salutation', 'organization',
+
     // Salary
     'hourly_rate', 'monthly_rate', 'annual_ctc', 'basic_salary', 'hra', 'special_allowances', 'probation_period',
     'base_salary', 'pay_frequency', 'housing_allowance', 'transport_allowance', 'medical_allowance', 'other_allowances',
@@ -72,7 +72,7 @@ public function leaveRequests()
     'aadhar_front', 'aadhar_back', 'driving_license_front', 'driving_license_back',
     'photo', 'passport_size_photo', 'pan_card',
     'passport_front', 'passport_back', 'pf_document', 'esi_document',
-    
+
     // Additional Docs
     'info_date', 'info_title', 'info_description',
     'bank_document_date', 'bank_document_title', 'bank_document_description', 'bank_document_file',
@@ -84,11 +84,15 @@ public function leaveRequests()
     'documents_authentic', 'suspend', 'isLogin',
 
     // Profile Image
-    'ProfileImage',
+    'ProfileImage', 'image',
 
-    // Tokens
-    'remember_token',
-   ];
+    // Tokens & Others
+    'remember_token', 'verified_at',
+
+    // Additional
+    'esi_card_no', 'pf_no'
+];
+
 
 
     /**

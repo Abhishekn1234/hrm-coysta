@@ -6,6 +6,7 @@ import {
 } from 'react-icons/fa';
 import { BsChevronRight, BsChevronDown } from "react-icons/bs";
 import React,{useState,useEffect,useContext} from 'react';
+import { toast } from 'react-toastify';
 function CustomAccordionToggle({ children, eventKey, icon }) {
   const { activeEventKey } = useContext(AccordionContext);
   const decoratedOnClick = useAccordionButton(eventKey);
@@ -42,86 +43,135 @@ function CustomAccordionToggle({ children, eventKey, icon }) {
   );
 }
 export default function Vendordetail() {
-  const { id } = useParams();
+const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-    const [loginEnabled, setLoginEnabled] = useState(true);
-    const [organization, setOrganization] = useState("Bangalore Branch");
-    const [username, setUsername] = useState("arun.k");
-    const [password, setPassword] = useState("password123");
-    const [addresses, setAddresses] = useState([]);
-       const [showForm, setShowForm] = useState(false);
-       const [newAddress, setNewAddress] = useState({
-         address: '',
-         city: '',
-         state: '',
-         pincode: ''
-       });
-     
-     // const [loginEnabled, setLoginEnabled] = useState(false);
-     //   const [organization, setOrganization] = useState("");
-      const [contacts, setContacts] = useState([]); // start empty
-     const handleSaveVendor=()=>{
-            
-            }
-       const handleSaveAddress = () => {
-         setAddresses([...addresses, newAddress]);
-         setNewAddress({
-           address: '',
-           city: '',
-           state: '',
-           pincode: ''
-         });
-         setShowForm(false);
-       };
-     
-       const [contactPersons, setContactPersons] = useState([]);
-        
+
+  const [vendor, setVendor] = useState(location.state?.vendor || null);
+  const [selectedVendorId, setSelectedVendorId] = useState(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [loading, setLoading] = useState(!vendor);
+
+  // Vendor fields
+  const [loginEnabled, setLoginEnabled] = useState(false);
+  const [organization, setOrganization] = useState('');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [salutation, setSalutation] = useState('');
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
+  const [gstNo, setGstNo] = useState('');
+  const [type, setType] = useState('');
+  const [address, setAddress] = useState('');
+  const [contacts, setContacts] = useState([]);
+
+  // Load vendor on initial mount
+  useEffect(() => {
+    if (!vendor) {
+      async function fetchVendorDetail() {
+        try {
+          const response = await axios.get(`http://127.0.0.1:8000/api/v1/vendors/${id}`);
+          setVendor(response.data);
+          console.log('Fetched vendor for editing:', response.data);
+        } catch (error) {
+          console.error('Failed to fetch vendor details:', error);
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      fetchVendorDetail();
+    }
+  }, [id, vendor]);
+
+  // Preload vendor into form when modal is opened
+  useEffect(() => {
+    if (showEditModal && selectedVendorId) {
+      axios
+        .get(`http://127.0.0.1:8000/api/v1/vendors/${selectedVendorId}`)
+        .then((res) => {
+          const v = res.data;
+          setLoginEnabled(v.login_enabled);
+          setOrganization(v.organization || '');
+          setUsername(v.username || '');
+          setPassword(v.password || '');
+          setSalutation(v.salutation || '');
+          setName(v.name);
+          setPhone(v.phone);
+          setEmail(v.email || '');
+          setGstNo(v.gst_no || '');
+          setType(v.type);
+          setAddress(v.address || '');
+          setContacts(
+            v.contact_persons?.map((cp) => ({
+              name: cp.name || '',
+              designation: cp.designation || '',
+              email: cp.work_email || '',
+              phone: cp.work_phone || '',
+            })) || []
+          );
+        });
+    }
+  }, [showEditModal, selectedVendorId]);
+
+  const handleSaveVendor = async () => {
+    const payload = {
+      salutation,
+      name,
+      phone,
+      email,
+      gst_no: gstNo,
+      type,
+      address,
+      login_enabled: loginEnabled,
+      organization,
+      username,
+      password,
+      contact_persons: contacts,
+    };
+   console.log(payload);
+    try {
+      await axios.put(`http://127.0.0.1:8000/api/v1/vendors/${selectedVendorId}`, payload);
+      toast.success('Vendor updated successfully');
+      setShowEditModal(false);
+      // Optionally refresh vendor data
+    } catch (error) {
+      console.log(error);
+      toast.error('Error updating vendor', error);
+    
+    }
+  };
+
   const addContact = () => {
-     setContacts([...contacts, { name: "", designation: "", email: "", phone: "" }]);
-   };
- 
-   const removeContact = (index) => {
-     const newContacts = contacts.filter((_, i) => i !== index);
-     setContacts(newContacts);
-   };
- 
-   const handleContactChanges = (index, field, value) => {
-     const updated = [...contacts];
-     updated[index][field] = value;
-     setContacts(updated);
-   };
- const handleContactChange = (index, field, value) => {
-   const updated = [...contactPersons];
-   updated[index][field] = value;
-   setContactPersons(updated);
- };
- 
-  const vendor = location.state?.vendor;
-  const path = location.pathname;
+    setContacts([...contacts, { name: '', designation: '', email: '', phone: '' }]);
+  };
+
+  const removeContact = (index) => {
+    setContacts(contacts.filter((_, i) => i !== index));
+  };
+
+  const handleContactChanges = (index, field, value) => {
+    const updated = [...contacts];
+    updated[index][field] = value;
+    setContacts(updated);
+  };
+
+  if (loading) return <p>Loading vendor...</p>;
   if (!vendor) return <p className="text-danger">Vendor not found.</p>;
-
-  // Determine initial tab based on optional query param (optional)
-  const query = new URLSearchParams(location.search);
-  const initialTab = query.get('tab') || 'staff';
-
-  const [key, setKey] = useState(initialTab);
-
-  const handleTabChange = (newKey) => {
-  setKey(newKey);
-
-  if (newKey === 'customers') {
-    navigate('/customer');
-  }
-  if (newKey === 'vendors') {
-    navigate('/vendor');
-  }
-  if (newKey === 'staff') {
-    navigate('/admin/people');
+  const handleDelete = async (id) => {
+  if (window.confirm('Are you sure you want to delete this vendor?')) {
+    try {
+      await axios.delete(`http://127.0.0.1:8000/api/v1/vendors/${id}`);
+      toast.success('Vendor deleted successfully');
+       navigate('/vendor');
+    } catch (error) {
+      console.error('Delete failed:', error);
+      toast.error('Failed to delete vendor');
+    }
   }
 };
-
-const [showEditModal, setShowEditModal] = useState(false);
+console.log(vendor);
 
   return (
     <div className="p-3">
@@ -163,15 +213,24 @@ const [showEditModal, setShowEditModal] = useState(false);
       {/* Edit & Delete Buttons */}
       <div className="d-flex gap-2">
         <Button
-          variant="outline-primary"
-          className="d-flex align-items-center"
-          onClick={() => setShowEditModal(true)}
-        >
-          <FaEdit className="me-1" /> Edit
-        </Button>
-        <Button variant="outline-danger" className="d-flex align-items-center">
-          <FaTrash className="me-1" /> Delete
-        </Button>
+  variant="outline-primary"
+  className="d-flex align-items-center"
+  onClick={() => {
+    setSelectedVendorId(vendor.id); // Replace `vendor` with your current item
+    setShowEditModal(true);
+  }}
+>
+  <FaEdit className="me-1" /> Edit
+</Button>
+
+        <Button
+  variant="outline-danger"
+  className="d-flex align-items-center"
+  onClick={() => handleDelete(vendor.id)} // pass the vendor ID
+>
+  <FaTrash className="me-1" /> Delete
+</Button>
+
       </div>
     </div>
 
@@ -215,14 +274,14 @@ const [showEditModal, setShowEditModal] = useState(false);
   >
     <h5 className="fw-semibold">Vendor Information</h5>
     <div className="row mt-3">
-      <div className="col-md-4"><strong>Organization:</strong><br />{vendor.branch}</div>
+      <div className="col-md-4"><strong>Organization:</strong><br />{vendor.organization}</div>
       <div className="col-md-4"><strong>Vendor Name:</strong><br />Mr. {vendor.name}</div>
-      <div className="col-md-4"><strong>Phone:</strong><br />{vendor.contact}</div>
+      <div className="col-md-4"><strong>Phone:</strong><br />{vendor.phone}</div>
     </div>
     <div className="row mt-3">
       <div className="col-md-4"><strong>Email:</strong><br />{vendor.email}</div>
       <div className="col-md-4"><strong>Type:</strong><br />{vendor.type}</div>
-      <div className="col-md-4"><strong>Created:</strong><br />{vendor.createdDate}</div>
+      <div className="col-md-4"><strong>Created:</strong><br />{vendor.created_at.slice(0,10)}</div>
     </div>
   </Tab>
 
@@ -237,24 +296,39 @@ const [showEditModal, setShowEditModal] = useState(false);
   <h6 className="fw-semibold mb-3">All Contacts</h6>
   <hr/>
   <Table responsive bordered hover size="sm" className="table-light">
-    <thead className="table-secondary">
-      <tr>
-        <th>Name</th>
-        <th>Designation</th>
-        <th>Work Email</th>
-        <th>Work Phone</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td>Vikram Singh</td>
-        <td>Owner</td>
-        <td>vikram@avpro.com</td>
-        <td>7654321098</td>
-      </tr>
-      {/* You can map through an array here if more contacts exist */}
-    </tbody>
-  </Table>
+  <thead className="table-secondary">
+    <tr>
+      <th>Name</th>
+      <th>Designation</th>
+      <th>Work Email</th>
+      <th>Work Phone</th>
+    </tr>
+  </thead>
+  <tbody>
+    
+   
+ {vendor.contact_persons?.length > 0 ? (
+  vendor.contact_persons.map((person) => (
+    <tr key={person.id}>
+      <td>{person.name || '-'}</td>
+      <td>{person.designation || '-'}</td>
+      <td>{person.work_email || '-'}</td>
+      <td>{person.work_phone || '-'}</td>
+    </tr>
+  ))
+) : (
+  <tr>
+    <td colSpan="4" className="text-center text-muted">
+      No contact persons available
+    </td>
+  </tr>
+)}
+
+
+
+  </tbody>
+</Table>
+
 </Tab>
 
 
@@ -357,93 +431,78 @@ const [showEditModal, setShowEditModal] = useState(false);
   </Tab>
 </Tabs>
 <Modal
-  show={showEditModal}
-  onHide={() => setShowEditModal(false)}
-  size="lg"
-  centered scrollable
->
-  <Modal.Header closeButton>
-    <Modal.Title className="fw-bold">Edit Vendor</Modal.Title>
-  </Modal.Header>
-  <hr/>
-<Card
-  className="mb-4 p-3 shadow-sm border rounded bg-light"
-  style={{ maxWidth: '720px',marginLeft:"40px" }} // Optional: center with margin: '0 auto'
->
-  {/* First Row: Login toggle and Organization */}
-  <Row className="mb-3">
-    {/* Login Toggle */}
-    <Col md={6} className="d-flex align-items-center">
-      <Form.Label className="fw-semibold mb-0 me-3">
-        Login is enabled
-      </Form.Label>
-      <Form.Check
-        type="switch"
-        id="login-switch"
-        checked={loginEnabled}
-        onChange={(e) => setLoginEnabled(e.target.checked)}
-      />
-    </Col>
+      show={showEditModal}
+      onHide={() => setShowEditModal(false)}
+      size="lg"
+      centered
+      scrollable
+    >
+      <Modal.Header closeButton>
+        <Modal.Title className="fw-bold">Edit Vendor</Modal.Title>
+      </Modal.Header>
+      <hr />
+      <Card className="mb-4 p-3 shadow-sm border rounded bg-light" style={{ maxWidth: '720px', marginLeft: '40px' }}>
+        <Row className="mb-3">
+          <Col md={6} className="d-flex align-items-center">
+            <Form.Label className="fw-semibold mb-0 me-3">
+              Login is enabled
+            </Form.Label>
+            <Form.Check
+              type="switch"
+              id="login-switch"
+              checked={loginEnabled}
+              onChange={(e) => setLoginEnabled(e.target.checked)}
+            />
+          </Col>
+          <Col md={6}>
+            <Form.Label className="fw-semibold">
+              Organization <span className="text-danger">*</span>
+            </Form.Label>
+            <Form.Select value={organization} onChange={(e) => setOrganization(e.target.value)}>
+              <option value="">Select Organization</option>
+              <option>Bangalore Branch</option>
+              <option>Kochi Branch</option>
+              <option>Calicut Branch</option>
+            </Form.Select>
+          </Col>
+        </Row>
 
-    {/* Organization Dropdown */}
-    <Col md={6}>
-      <Form.Label className="fw-semibold">
-        Organization <span className="text-danger">*</span>
-      </Form.Label>
-      <Form.Select
-        value={organization}
-        onChange={(e) => setOrganization(e.target.value)}
-      >
-        <option value="">Select Organization</option>
-        <option value="Bangalore Branch">Bangalore Branch</option>
-        <option value="Kochi Branch">Kochi Branch</option>
-        <option value="Calicut Branch">Calicut Branch</option>
-      </Form.Select>
-    </Col>
-  </Row>
+        <Row>
+          <Col md={6}>
+            <Form.Group className="mb-3">
+              <Form.Label className="fw-semibold">Username <span className="text-danger">*</span></Form.Label>
+              <Form.Control
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Enter username"
+              />
+            </Form.Group>
+          </Col>
+          <Col md={6}>
+            <Form.Group className="mb-3">
+              <Form.Label className="fw-semibold">Password <span className="text-danger">*</span></Form.Label>
+              <Form.Control
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter password"
+              />
+            </Form.Group>
+          </Col>
+        </Row>
+      </Card>
 
-  {/* Second Row: Username and Password */}
-  <Row>
-    <Col md={6}>
-      <Form.Group className="mb-3">
-        <Form.Label className="fw-semibold">
-          Username <span className="text-danger">*</span>
-        </Form.Label>
-        <Form.Control
-          type="text"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          placeholder="Enter username"
-        />
-      </Form.Group>
-    </Col>
-
-    <Col md={6}>
-      <Form.Group className="mb-3">
-        <Form.Label className="fw-semibold">
-          Password <span className="text-danger">*</span>
-        </Form.Label>
-        <Form.Control
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Enter password"
-        />
-      </Form.Group>
-    </Col>
-  </Row>
-</Card>
- <Modal.Body>
-<Accordion defaultActiveKey="0" alwaysOpen>
-          {/* Vendor Details */}
+      <Modal.Body>
+        <Accordion defaultActiveKey="0" alwaysOpen>
           <Accordion.Item eventKey="0">
-            <CustomAccordionToggle eventKey="0">Vendor Details</CustomAccordionToggle>
+            <Accordion.Header>Vendor Details</Accordion.Header>
             <Accordion.Body>
               <Row className="mb-3">
                 <Col md={3}>
-                  <Form.Group controlId="salutation">
+                  <Form.Group>
                     <Form.Label>Salutation<span className="text-danger">*</span></Form.Label>
-                    <Form.Select>
+                    <Form.Select value={salutation} onChange={(e) => setSalutation(e.target.value)}>
                       <option>Mr.</option>
                       <option>Ms.</option>
                       <option>Mrs.</option>
@@ -451,54 +510,53 @@ const [showEditModal, setShowEditModal] = useState(false);
                   </Form.Group>
                 </Col>
                 <Col md={3}>
-                  <Form.Group controlId="vendorName">
+                  <Form.Group>
                     <Form.Label>Name<span className="text-danger">*</span></Form.Label>
-                    <Form.Control type="text" />
+                    <Form.Control type="text" value={name} onChange={(e) => setName(e.target.value)} />
                   </Form.Group>
                 </Col>
                 <Col md={3}>
-                  <Form.Group controlId="vendorPhone">
+                  <Form.Group>
                     <Form.Label>Phone<span className="text-danger">*</span></Form.Label>
-                    <Form.Control type="text" />
+                    <Form.Control type="text" value={phone} onChange={(e) => setPhone(e.target.value)} />
                   </Form.Group>
                 </Col>
                 <Col md={3}>
-                  <Form.Group controlId="vendorEmail">
+                  <Form.Group>
                     <Form.Label>Email</Form.Label>
-                    <Form.Control type="email" />
+                    <Form.Control type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
                   </Form.Group>
                 </Col>
               </Row>
 
               <Row className="mb-3">
                 <Col md={4}>
-                  <Form.Group controlId="gstNo">
+                  <Form.Group>
                     <Form.Label>GST No.</Form.Label>
-                    <Form.Control type="text" />
+                    <Form.Control type="text" value={gstNo} onChange={(e) => setGstNo(e.target.value)} />
                   </Form.Group>
                 </Col>
                 <Col md={4}>
-                  <Form.Group controlId="vendorType">
+                  <Form.Group>
                     <Form.Label>Type<span className="text-danger">*</span></Form.Label>
-                    <Form.Select>
+                    <Form.Select value={type} onChange={(e) => setType(e.target.value)}>
                       <option>Material</option>
                       <option>Service</option>
                     </Form.Select>
                   </Form.Group>
                 </Col>
                 <Col md={4}>
-                  <Form.Group controlId="vendorAddress">
+                  <Form.Group>
                     <Form.Label>Address</Form.Label>
-                    <Form.Control as="textarea" rows={1} />
+                    <Form.Control as="textarea" rows={1} value={address} onChange={(e) => setAddress(e.target.value)} />
                   </Form.Group>
                 </Col>
               </Row>
             </Accordion.Body>
           </Accordion.Item>
 
-          {/* Contact Persons */}
           <Accordion.Item eventKey="1">
-            <CustomAccordionToggle eventKey="1">Contact Persons</CustomAccordionToggle>
+            <Accordion.Header>Contact Persons</Accordion.Header>
             <Accordion.Body>
               {contacts.length === 0 && (
                 <div className="text-end mb-3">
@@ -512,7 +570,7 @@ const [showEditModal, setShowEditModal] = useState(false);
                 <div key={index} className="mb-3 border rounded p-3 bg-white">
                   <Row className="mb-2">
                     <Col md={6}>
-                      <Form.Group controlId={`contact-name-${index}`}>
+                      <Form.Group>
                         <Form.Label>Name</Form.Label>
                         <Form.Control
                           type="text"
@@ -522,7 +580,7 @@ const [showEditModal, setShowEditModal] = useState(false);
                       </Form.Group>
                     </Col>
                     <Col md={6}>
-                      <Form.Group controlId={`contact-designation-${index}`}>
+                      <Form.Group>
                         <Form.Label>Designation</Form.Label>
                         <Form.Control
                           type="text"
@@ -534,7 +592,7 @@ const [showEditModal, setShowEditModal] = useState(false);
                   </Row>
                   <Row>
                     <Col md={6}>
-                      <Form.Group controlId={`contact-email-${index}`}>
+                      <Form.Group>
                         <Form.Label>Work Email</Form.Label>
                         <Form.Control
                           type="email"
@@ -544,7 +602,7 @@ const [showEditModal, setShowEditModal] = useState(false);
                       </Form.Group>
                     </Col>
                     <Col md={6}>
-                      <Form.Group controlId={`contact-phone-${index}`}>
+                      <Form.Group>
                         <Form.Label>Work Phone</Form.Label>
                         <Form.Control
                           type="text"
@@ -577,17 +635,13 @@ const [showEditModal, setShowEditModal] = useState(false);
             </Accordion.Body>
           </Accordion.Item>
         </Accordion>
-        </Modal.Body>
-       <Modal.Footer>
-               <Button variant="secondary" onClick={() => setShowEditModal(false)}>
-                 Cancel
-               </Button>
-               <Button variant="primary" onClick={handleSaveVendor}>
-                 Edit Vendor
-               </Button>
-             </Modal.Footer>
-           
-  </Modal>
+      </Modal.Body>
+
+      <Modal.Footer>
+        <Button variant="secondary" onClick={() => setShowEditModal(false)}>Cancel</Button>
+        <Button variant="primary" onClick={handleSaveVendor}>Edit Vendor</Button>
+      </Modal.Footer>
+    </Modal>
       </div>
     </div>
   );

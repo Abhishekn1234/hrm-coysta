@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class GstDetail extends Model
 {
     use HasFactory;
-
+     protected $table = 'gst_details';
     protected $fillable = [
         'customer_id',
         'gst_number',

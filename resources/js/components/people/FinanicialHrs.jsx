@@ -1,6 +1,6 @@
 import { Row, Col, Form } from 'react-bootstrap';
 
-export default function FinancialHR({ data, setData }) {
+export default function FinancialHRs({ data, setData }) {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setData((prev) => ({
@@ -18,7 +18,7 @@ export default function FinancialHR({ data, setData }) {
             <Form.Control
               type="number"
               name="dailyRemuneration"
-              value={data.daily_remuneration}
+              value={data.dailyRemuneration}
               onChange={handleChange}
               placeholder="Enter daily remuneration"
             />
@@ -31,7 +31,7 @@ export default function FinancialHR({ data, setData }) {
             <Form.Control
               type="number"
               name="rentAllowance"
-              value={data.rent_allowance_percent}
+              value={data.rentAllowance}
               onChange={handleChange}
               placeholder="Enter allowance percentage"
             />
@@ -44,7 +44,7 @@ export default function FinancialHR({ data, setData }) {
             <Form.Control
               type="number"
               name="casualLeaves"
-              value={data.casual_leaves}
+              value={data.casualLeaves}
               onChange={handleChange}
               placeholder="Enter no. of casual leaves"
             />
@@ -59,7 +59,7 @@ export default function FinancialHR({ data, setData }) {
             <Form.Control
               type="text"
               name="esiCardNo"
-              value={data.esi_card_no}
+              value={data.esiCardNo}
               onChange={handleChange}
               placeholder="Enter ESI card number"
             />
@@ -72,7 +72,7 @@ export default function FinancialHR({ data, setData }) {
             <Form.Control
               type="text"
               name="pfNo"
-              value={data.pf_no}
+              value={data.pfNo}
               onChange={handleChange}
               placeholder="Enter PF number"
             />
@@ -84,12 +84,12 @@ export default function FinancialHR({ data, setData }) {
           <Form.Label>COVID-19 Vaccinated</Form.Label>
           <Form.Select
             name="vaccinated"
-            value={data.covid_vaccinated}
+            value={data.vaccinated}
             onChange={handleChange}
           >
             <option value="">Select</option>
-            <option>Yes</option>
-            <option>No</option>
+            <option value="1">Yes</option>
+            <option value="0">No</option>
           </Form.Select>
         </Form.Group>
 

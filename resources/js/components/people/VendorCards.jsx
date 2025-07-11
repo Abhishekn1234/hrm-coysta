@@ -13,7 +13,7 @@ export default function VendorCards() {
   useEffect(() => {
     async function fetchCounts() {
       try {
-        const response = await axios.get("http://127.0.0.1:8000/api/vendors/count/all");
+        const response = await axios.get("http://127.0.0.1:8000/api/v1/vendor-count");
         setCounts(response.data);
       } catch (error) {
         console.error("Error fetching vendor counts:", error);
@@ -80,68 +80,7 @@ export default function VendorCards() {
         </Row>
       </div>
 
-      {/* Filters Row */}
-      <Row className="align-items-end mb-3">
-        <Col md={4}>
-          <Form.Group controlId="search">
-            <Form.Control
-              type="text"
-              placeholder="Keyword Search"
-              style={{
-                borderRadius: "12px",
-                padding: "0.6rem 1rem",
-                boxShadow: "none",
-                border: "1px solid #ced4da",
-              }}
-            />
-          </Form.Group>
-        </Col>
-
-        <Col md={4}>
-          <Form.Group controlId="organization">
-            <Form.Label style={{ fontWeight: 500 }}>All Organization</Form.Label>
-            <Form.Select
-              style={{
-                borderRadius: "12px",
-                padding: "0.6rem 1rem",
-              }}
-            >
-              <option>All</option>
-              <option>Organization A</option>
-              <option>Organization B</option>
-            </Form.Select>
-          </Form.Group>
-        </Col>
-
-        <Col md={4}>
-          <Form.Group controlId="tillDate">
-            <Form.Label style={{ fontWeight: 500 }}>Till Date</Form.Label>
-            <Form.Control
-              type="date"
-              style={{
-                borderRadius: "12px",
-                padding: "0.6rem 1rem",
-              }}
-            />
-          </Form.Group>
-        </Col>
-      </Row>
-
-      {/* Reset Filters Link */}
-      <Row>
-        <Col className="text-end">
-          <Button
-            variant="link"
-            style={{
-              padding: 0,
-              color: "#0d6efd",
-              fontWeight: 500,
-            }}
-          >
-            Reset Filters
-          </Button>
-        </Col>
-      </Row>
+     
     </>
   );
 }

@@ -9,17 +9,20 @@ class Customer extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'profile_logo',
-        'customer_type',
-        'company_name',
-        'display_name',
-        'owner_name',
-        'primary_contact_name',
-        'primary_contact_phone',
-        'email',
-        'pan_no',
-    ];
+   protected $fillable = [
+    'profile_logo',
+    'customer_type',
+    'company_name',
+    'display_name',
+    'owner_name',
+    'primary_contact_name',
+    'primary_contact_phone',
+    'email',
+    'pan_no',
+    'organization',
+    'login_enabled', // ✅ Add here
+];
+
 
     // Relationships
 

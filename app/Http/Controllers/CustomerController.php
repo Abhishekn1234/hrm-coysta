@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+use Illuminate\Support\Facades\Log;
 
 use App\Models\Customer;
 use Illuminate\Http\Request;
@@ -15,47 +16,82 @@ class CustomerController extends Controller
     }
 
     // ✅ POST: Store new customer with related data
-    public function store(Request $request)
-    {
-        $data = $request->validate([
-            'profile_logo' => 'nullable|string',
-            'customer_type' => 'required|string',
-            'company_name' => 'nullable|string',
-            'display_name' => 'required|string',
-            'owner_name' => 'nullable|string',
-            'primary_contact_name' => 'required|string',
-            'primary_contact_phone' => 'required|string',
-            'email' => 'nullable|email',
-            'pan_no' => 'nullable|string',
+        public function store(Request $request)
+        {
+            Log::info('🚀 CustomerController@store called', ['data' => $request->all()]);
+            info('📥 Store endpoint reached');
 
-            'gst_details' => 'array',
-            'gst_details.*.gst_number' => 'nullable|string',
-            'gst_details.*.registered_address' => 'nullable|string',
-            'gst_details.*.place_of_supply' => 'nullable|string',
+            $data = $request->validate([
+                'profile_logo' => 'nullable|file|mimes:jpeg,png,jpg,gif|max:2048',
 
-            'shipping_addresses' => 'array',
-            'shipping_addresses.*.address' => 'nullable|string',
-            'shipping_addresses.*.city' => 'nullable|string',
-            'shipping_addresses.*.state' => 'nullable|string',
-            'shipping_addresses.*.pincode' => 'nullable|string',
+                'customer_type' => 'required|string',
+                'company_name' => 'nullable|string',
+                'display_name' => 'required|string',
+                'owner_name' => 'nullable|string',
+                'primary_contact_name' => 'required|string',
+                'primary_contact_phone' => 'required|string',
+                'email' => 'nullable|email',
+                'pan_no' => 'nullable|string',
+                'organization' => 'nullable|string',
+                'login_enabled' => 'nullable|boolean',
 
-            'contact_persons' => 'array',
-            'contact_persons.*.contact_name' => 'nullable|string',
-            'contact_persons.*.designation' => 'nullable|string',
-            'contact_persons.*.work_email' => 'nullable|email',
-            'contact_persons.*.work_phone' => 'nullable|string',
-            'contact_persons.*.personal_email' => 'nullable|email',
-            'contact_persons.*.personal_phone' => 'nullable|string',
-        ]);
+                'gst_details' => 'array',
+                'gst_details.*.gst_number' => 'nullable|string',
+                'gst_details.*.registered_address' => 'nullable|string',
+                'gst_details.*.place_of_supply' => 'nullable|string',
 
-        $customer = Customer::create($data);
+                'shipping_addresses' => 'array',
+                'shipping_addresses.*.address' => 'nullable|string',
+                'shipping_addresses.*.city' => 'nullable|string',
+                'shipping_addresses.*.state' => 'nullable|string',
+                'shipping_addresses.*.pincode' => 'nullable|string',
 
-        $customer->gstDetails()->createMany($data['gst_details'] ?? []);
-        $customer->shippingAddresses()->createMany($data['shipping_addresses'] ?? []);
-        $customer->contactPersons()->createMany($data['contact_persons'] ?? []);
+                'contact_persons' => 'array',
+                'contact_persons.*.contact_name' => 'nullable|string',
+                'contact_persons.*.designation' => 'nullable|string',
+                'contact_persons.*.work_email' => 'nullable|email',
+                'contact_persons.*.work_phone' => 'nullable|string',
+                'contact_persons.*.personal_email' => 'nullable|email',
+                'contact_persons.*.personal_phone' => 'nullable|string',
+            ]);
 
-        return response()->json(['message' => 'Customer created successfully', 'customer' => $customer]);
-    }
+            // ✅ Log validated data
+            Log::info('✅ Validated data:', $data);
+
+            // Handle file upload
+            if ($request->hasFile('profile_logo')) {
+                $path = $request->file('profile_logo')->store('logos', 'public');
+                $data['profile_logo'] = $path;
+                Log::info('🖼️ Profile logo stored at:', ['path' => $path]);
+            }
+
+            // Create customer
+            $customer = Customer::create($data);
+            Log::info('✅ Customer saved to DB:', ['customer' => $customer]);
+
+            // Create related data
+            if (!empty($data['gst_details'])) {
+                $customer->gstDetails()->createMany($data['gst_details']);
+                Log::info('🧾 GST Details saved:', $data['gst_details']);
+            }
+
+            if (!empty($data['shipping_addresses'])) {
+                $customer->shippingAddresses()->createMany($data['shipping_addresses']);
+                Log::info('📦 Shipping addresses saved:', $data['shipping_addresses']);
+            }
+
+            if (!empty($data['contact_persons'])) {
+                $customer->contactPersons()->createMany($data['contact_persons']);
+                Log::info('👥 Contact persons saved:', $data['contact_persons']);
+            }
+
+            return response()->json([
+                'message' => 'Customer created successfully',
+                'customer' => $customer
+            ]);
+        }
+
+
 
     // ✅ GET: Show customer by ID
     public function show(string $id)
@@ -66,28 +102,67 @@ class CustomerController extends Controller
 
     // ✅ PUT: Update customer
     public function update(Request $request, string $id)
-    {
-        $customer = Customer::findOrFail($id);
+{
+    $customer = Customer::findOrFail($id);
 
-        $data = $request->validate([
-            'profile_logo' => 'nullable|string',
-            'customer_type' => 'required|string',
-            'company_name' => 'nullable|string',
-            'display_name' => 'required|string',
-            'owner_name' => 'nullable|string',
-            'primary_contact_name' => 'required|string',
-            'primary_contact_phone' => 'required|string',
-            'email' => 'nullable|email',
-            'pan_no' => 'nullable|string',
-        ]);
+    $data = $request->validate([
+        'profile_logo' => 'nullable|string',
+        'customer_type' => 'required|string',
+        'company_name' => 'nullable|string',
+        'display_name' => 'required|string',
+        'owner_name' => 'nullable|string',
+        'primary_contact_name' => 'required|string',
+        'primary_contact_phone' => 'required|string',
+        'email' => 'nullable|email',
+        'pan_no' => 'nullable|string',
+        'username'=>'nullable',
+        'password'=>'nullable',
+        'organization'=>'nullable'
+    ]);
 
-        $customer->update($data);
+    $customer->update($data);
 
-        // Optional: Update related tables if sent
-        // You may also implement logic to sync or replace related records
-
-        return response()->json(['message' => 'Customer updated successfully', 'customer' => $customer]);
+    // ✅ Update GST Details if sent
+    if ($request->has('gst_details')) {
+        // assuming one-to-many relation: customer->gstDetails()
+        $customer->gstDetails()->delete();
+        foreach ($request->gst_details as $gst) {
+            $customer->gstDetails()->create([
+                'gst_number' => $gst['gst_number'],
+                'place_of_supply' => $gst['place_of_supply'],
+            ]);
+        }
     }
+
+    // ✅ Update Shipping Addresses if sent
+    if ($request->has('shipping_addresses')) {
+        $customer->shippingAddresses()->delete();
+        foreach ($request->shipping_addresses as $addr) {
+            $customer->shippingAddresses()->create([
+                'address' => $addr['address'],
+                'city' => $addr['city'],
+                'state' => $addr['state'],
+                'pincode' => $addr['pincode'],
+            ]);
+        }
+    }
+
+    // ✅ Update Contact Persons if sent
+    if ($request->has('contact_persons')) {
+        $customer->contactPersons()->delete();
+        foreach ($request->contact_persons as $person) {
+            $customer->contactPersons()->create([
+                'contact_name' => $person['contact_name'],
+                'designation' => $person['designation'],
+                'work_email' => $person['work_email'],
+                'work_phone' => $person['work_phone'],
+            ]);
+        }
+    }
+
+    return response()->json(['message' => 'Customer updated successfully', 'customer' => $customer]);
+}
+
 
     // ✅ DELETE: Delete customer
     public function destroy(string $id)

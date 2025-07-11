@@ -1,14 +1,6 @@
 <?php
 use App\Http\Controllers\Admin\HrmController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\CustomerController;
- Route::get('/customers', [CustomerController::class, 'index']);
-    Route::post('/customers', [CustomerController::class, 'store']);
-    Route::get('/customers/{id}', [CustomerController::class, 'show']);
-    Route::put('/customers/{id}', [CustomerController::class, 'update']);
-    Route::delete('/customers/{id}', [CustomerController::class, 'destroy']);
-
-
 Route::middleware('auth:sanctum')->get('/admin/profile', [HrmController::class, 'getProfile']);
 
 Route::group(['namespace' => 'api\v2', 'prefix' => 'v2', 'middleware' => ['api_lang']], function () {

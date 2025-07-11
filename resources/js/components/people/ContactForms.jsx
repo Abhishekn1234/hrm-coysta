@@ -1,7 +1,7 @@
 import React from 'react';
 import { Row, Col, Form } from 'react-bootstrap';
 
-export default function ContactForm({ data, setData }) {
+export default function ContactForms({ data, setData }) {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setData(prev => ({
@@ -31,7 +31,7 @@ export default function ContactForm({ data, setData }) {
             <Form.Control
               type="text"
               name="workPhone"
-              value={data.work_phone}
+              value={data.workPhone}
               onChange={handleChange}
               placeholder="Enter work phone"
             />
@@ -43,7 +43,7 @@ export default function ContactForm({ data, setData }) {
             <Form.Control
               type="email"
               name="workEmail"
-              value={data.personal_email}
+              value={data.workEmail}
               onChange={handleChange}
               placeholder="Enter work email"
             />
@@ -58,7 +58,7 @@ export default function ContactForm({ data, setData }) {
             <Form.Control
               type="email"
               name="personalEmail"
-              value={data.personal_email}
+              value={data.personalEmail}
               onChange={handleChange}
               placeholder="Enter personal email"
             />
@@ -70,7 +70,7 @@ export default function ContactForm({ data, setData }) {
             <Form.Control
               type="text"
               name="emergencyContact1"
-              value={data.emergency_contact_1}
+              value={data.emergencyContact1}
               onChange={handleChange}
               placeholder="Enter emergency contact 1"
             />
@@ -82,7 +82,7 @@ export default function ContactForm({ data, setData }) {
             <Form.Control
               type="text"
               name="emergencyContact2"
-              value={data.emergency_contact_2}
+              value={data.emergencyContact2}
               onChange={handleChange}
               placeholder="Enter emergency contact 2"
             />
@@ -97,7 +97,7 @@ export default function ContactForm({ data, setData }) {
             <Form.Control
               type="text"
               name="parentMobile"
-              value={data.parent_mobile}
+              value={data.parentMobile}
               onChange={handleChange}
               placeholder="Enter mobile number"
             />

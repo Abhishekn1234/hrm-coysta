@@ -17,45 +17,65 @@ class VendorController extends Controller
 
     // Create vendor with contact persons
     public function store(Request $request)
-    {
-        $vendor = Vendor::create($request->only([
-            'salutation', 'name', 'phone', 'email', 'gst_no', 'type', 'material', 'address'
-        ]));
+{
+    $vendor = Vendor::create($request->only([
+        'salutation', 'name', 'phone', 'email', 'gst_no', 'type', 'material', 'address',
+        'organization', 'login_enabled'  // Added the missing fields
+    ]));
 
-        if ($request->has('contact_persons')) {
-            foreach ($request->contact_persons as $person) {
-                $vendor->contactPersons()->create($person);
-            }
+    if ($request->has('contact_persons')) {
+        foreach ($request->contact_persons as $person) {
+            $vendor->contactPersons()->create($person);
         }
-
-        return response()->json(['message' => 'Vendor created', 'vendor' => $vendor]);
     }
 
+    return response()->json(['message' => 'Vendor created', 'vendor' => $vendor]);
+}
     // Show single vendor
-    public function show($id)
-    {
-        $vendor = Vendor::with('contactPersons')->findOrFail($id);
-        return response()->json($vendor);
-    }
+   public function show($id)
+{
+    $vendor = Vendor::with('contactPersons')->findOrFail($id);
+    return response()->json($vendor);
+}
+
 
     // Update vendor and contact persons
     public function update(Request $request, $id)
-    {
-        $vendor = Vendor::findOrFail($id);
-        $vendor->update($request->only([
-            'salutation', 'name', 'phone', 'email', 'gst_no', 'type', 'material', 'address'
-        ]));
+{
+    $vendor = Vendor::findOrFail($id);
 
-        // Optional: remove and recreate contact persons
-        $vendor->contactPersons()->delete();
-        if ($request->has('contact_persons')) {
-            foreach ($request->contact_persons as $person) {
-                $vendor->contactPersons()->create($person);
-            }
+    // Update vendor base fields
+    $vendor->update($request->only([
+        'salutation',
+        'name',
+        'phone',
+        'email',
+        'gst_no',
+        'type',
+        'material',
+        'address',
+        'login_enabled',
+        'organization',
+        'username',
+        'password', // You may hash this if needed
+    ]));
+
+    // Update Contact Persons
+    $vendor->contactPersons()->delete();
+
+    if ($request->has('contact_persons') && is_array($request->contact_persons)) {
+        foreach ($request->contact_persons as $person) {
+            $vendor->contactPersons()->create([
+                'name' => $person['name'] ?? '',
+                'designation' => $person['designation'] ?? null,
+                'work_email' => $person['email'] ?? null,
+                'work_phone' => $person['phone'] ?? null,
+            ]);
         }
-
-        return response()->json(['message' => 'Vendor updated']);
     }
+
+    return response()->json(['message' => 'Vendor updated successfully']);
+}
 
     // Delete vendor
     public function destroy($id)

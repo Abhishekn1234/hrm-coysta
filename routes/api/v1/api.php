@@ -27,34 +27,47 @@ use App\Http\Controllers\LeaveRequestController;
 use App\Http\Controllers\UserAttendanceController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\PeopleController;
+use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\VendorController;
+
 Route::prefix('v1')->group(function () {
     Route::put('/users/{id}/attendance', [AttendanceController::class, 'store']);
     Route::get('/user/{id}/attendance-monthly-summary', [AttendanceController::class, 'monthlySummary']);
+});
+Route::prefix('customer')->group(function () {
+    Route::get('/customers', [CustomerController::class, 'index']);
+    Route::get('/customer/count', [CustomerController::class, 'count']);
+    Route::post('/customer', [CustomerController::class, 'store']);
+    Route::get('/customer-count-business', [CustomerController::class, 'countBusinessCustomers']);
+    Route::get('/customer-count-individual', [CustomerController::class, 'countIndividualCustomers']);
+    Route::get('/customer-count-per-month', [CustomerController::class, 'countPerMonth']);
+
+   
+    Route::get('/customer/{id}', [CustomerController::class, 'show']);
+    Route::put('/customer/{id}', [CustomerController::class, 'update']);
+    Route::delete('/customer/{id}', [CustomerController::class, 'destroy']);
+});
+
+Route::prefix('v1')->group(function () {
+    Route::get('/vendors', [VendorController::class, 'index']); // List all vendors
+    Route::post('/vendors', [VendorController::class, 'store']); // Create new vendor with contacts
+    Route::get('/vendors/{id}', [VendorController::class, 'show']); // Show single vendor
+    Route::put('/vendors/{id}', [VendorController::class, 'update']); // Update vendor and contacts
+    Route::delete('/vendors/{id}', [VendorController::class, 'destroy']); // Delete vendor
+    Route::get('/vendor-count', [VendorController::class, 'count']); // Count vendors by type
 });
 
    Route::get('/staff/counts', [PeopleController::class, 'getCounts']);
 Route::get('/staff/monthly', [PeopleController::class, 'getMonthlyStaffCounts']);
 
-// routes/api.php
-Route::prefix('v1')->group(function () {
-    Route::prefix('staff')->group(function () {
-        Route::get('/', [PeopleController::class, 'getAllStaff']);
-        Route::get('/{id}', [PeopleController::class, 'getStaffById']);
-        Route::post('/', [PeopleController::class, 'store']);
-        Route::put('/{id}', [PeopleController::class, 'update']);
-        Route::delete('/{id}', [PeopleController::class, 'destroy']);
-    });
+Route::prefix('staff')->group(function () {
+    Route::get('/', [PeopleController::class, 'getAllStaff']);
+    Route::get('/{id}', [PeopleController::class, 'getStaffById']);
+    Route::post('/', [PeopleController::class, 'store']);
+    Route::put('/{id}', [PeopleController::class, 'update']);
+    Route::delete('/{id}', [PeopleController::class, 'destroy']);
 });
-use App\Http\Controllers\CustomerController;
 
-
-   
-// Counts
-Route::get('/customers-count', [CustomerController::class, 'count']);
-Route::get('/customers-monthly-count', [CustomerController::class, 'countPerMonth']);
-Route::get('/customers-business-count', [CustomerController::class, 'countBusinessCustomers']);
-Route::get('/customers-individual-count', [CustomerController::class, 'countIndividualCustomers']);
 
 Route::post('/users/{id}/attendance', [UserAttendanceController::class, 'update']);
  Route::get('/users/{id}/attendance-monthly-summary', [AttendanceController::class, 'monthlySummary']);
@@ -94,25 +107,6 @@ Route::prefix('users')->group(function () {
     Route::put('{id}', [UserController::class, 'update']);
     Route::delete('{id}', [UserController::class, 'destroy']);
 });
-Route::prefix('vendors')->group(function () {
-    Route::get('/', [VendorController::class, 'index']);
-    Route::post('/', [VendorController::class, 'store']);
-    Route::get('/{id}', [VendorController::class, 'show']);
-    Route::put('/{id}', [VendorController::class, 'update']);
-    Route::delete('/{id}', [VendorController::class, 'destroy']);
-    Route::get('/count/all', [VendorController::class, 'count']);
-});
-
-Route::prefix('v1')->group(function () {
-    Route::prefix('customers')->group(function () {
-        Route::get('/', [CustomerController::class, 'index']);
-        Route::post('/', [CustomerController::class, 'store']);
-        Route::get('/{id}', [CustomerController::class, 'show']);
-        Route::put('/{id}', [CustomerController::class, 'update']);
-        Route::delete('/{id}', [CustomerController::class, 'destroy']);
-    });
-});
-
 Route::prefix('v1')->group(function () {
     Route::prefix('departments')->group(function () {
         Route::get('/', [DepartmentController::class, 'index']);          // GET all
