@@ -57,6 +57,16 @@ Route::prefix('v1')->group(function () {
     Route::get('/vendor-count', [VendorController::class, 'count']); // Count vendors by type
 });
 
+
+Route::prefix('benefits')->group(function () {
+    Route::get('/{userId}', [HrmController::class, 'getBenefit']);  
+     Route::get('/', [HrmController::class, 'getBenefits']);  
+        
+    Route::post('/', [HrmController::class, 'addBenefit']);              // POST
+    Route::put('/{userId}', [HrmController::class, 'editBenefit']);      // PUT
+    Route::delete('/{userId}', [HrmController::class, 'deleteBenefit']); // DELETE
+});
+
    Route::get('/staff/counts', [PeopleController::class, 'getCounts']);
 Route::get('/staff/monthly', [PeopleController::class, 'getMonthlyStaffCounts']);
 

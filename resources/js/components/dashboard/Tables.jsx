@@ -23,6 +23,7 @@ import { toast } from "react-toastify";
 import axios from "axios";
 import html2pdf from "html2pdf.js";
 import "./Table.css";
+import jsPDF from 'jspdf';
 import EmployeeBenefits from "./EmployeeBenefits";
 
 const Tables = forwardRef((props, ref) => {
@@ -68,10 +69,10 @@ const handleShow = () => setShowModal(true);
   ];
 
   const handleClose = () => {
-    setActiveItem(null);
-    setViewItem(null);
-    onHide();
-  };
+  setShowBenefitsModal(false);
+  setViewItem(null);
+  setActiveItem(null);
+};
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -83,9 +84,13 @@ const handleShow = () => setShowModal(true);
     alert(`Submitting: ${JSON.stringify(formData)}`);
     setActiveItem(null);
   };
-
 const handlePrintSlip = () => {
   const element = slipRef.current;
+  const auditDiv = document.querySelector('.no-print');
+
+  // Temporarily hide the AI Payroll Audit div
+  if (auditDiv) auditDiv.style.display = 'none';
+
   const opt = {
     margin: 0.5,
     filename: `Payroll_${state.selectedEmployee?.first_name}_${state.payrollMonth}.pdf`,
@@ -93,8 +98,13 @@ const handlePrintSlip = () => {
     html2canvas: { scale: 2 },
     jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
   };
-  html2pdf().set(opt).from(element).save();
+
+  html2pdf().set(opt).from(element).save().then(() => {
+    // Restore the div after PDF is generated
+    if (auditDiv) auditDiv.style.display = '';
+  });
 };
+
 
 const [formData, setFormData] = useState({
   // Personal Info
@@ -1300,10 +1310,10 @@ useImperativeHandle(ref, () => ({
             onChange={handleChange}
           >
             <option value="">Select gender</option>
-            <option value="Male">Male</option>
-            <option value="Female">Female</option>
-            <option value="Other">Other</option>
-            <option value="Prefer not to say">Prefer not to say</option>
+            <option>Male</option>
+            <option>Female</option>
+            <option>Other</option>
+            <option>Prefer not to say</option>
           </Form.Select>
         </Form.Group>
       </div>
@@ -2260,15 +2270,7 @@ useImperativeHandle(ref, () => ({
           </div>
 
           {/* AI Message */}
-        <div className="d-flex justify-content-center mt-3 no-print">
-    <div
-      className="rounded px-4 py-2 d-flex align-items-center gap-2"
-      style={{ backgroundColor: "#17a2b8", color: "white" }}
-    >
-      <FaRobot />
-      AI Payroll Audit: No anomalies detected. Tax optimization opportunity available.
-    </div>
-  </div>
+       
 </div>
 
         {/* 🚫 Not included in print: Action buttons */}

@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Models\EmploymentHistory;
 use App\Models\EmployeeDocument;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Benefit;
 
 class HrmController extends Controller
 {
@@ -651,5 +652,51 @@ public function getCurrentUser()
         'user_type' => $user->user_type,
     ]);
 }
+public function getBenefit($userId)
+    {
+        $benefit = Benefit::where('user_id', $userId)->first();
+        return $benefit
+            ? response()->json($benefit)
+            : response()->json(['message' => 'Benefit not found'], 404);
+    }
+    public function getBenefits()
+            {
+                $benefits = Benefit::all();
 
+                return $benefits->isEmpty()
+                    ? response()->json(['message' => 'No benefits found'], 404)
+                    : response()->json($benefits);
+            }
+
+
+    // ✅ Add a new benefit record
+    public function addBenefit(Request $request)
+    {
+        $benefit = Benefit::create($request->all());
+        return response()->json($benefit, 201);
+    }
+
+    // ✅ Edit existing benefit for a user
+    public function editBenefit(Request $request, $userId)
+    {
+        $benefit = Benefit::where('user_id', $userId)->first();
+        if (!$benefit) {
+            return response()->json(['message' => 'Benefit not found'], 404);
+        }
+
+        $benefit->update($request->all());
+        return response()->json($benefit);
+    }
+
+    // ✅ Delete benefit for a user
+    public function deleteBenefit($userId)
+    {
+        $benefit = Benefit::where('user_id', $userId)->first();
+        if (!$benefit) {
+            return response()->json(['message' => 'Benefit not found'], 404);
+        }
+
+        $benefit->delete();
+        return response()->json(['message' => 'Benefit deleted successfully']);
+    }
 }
