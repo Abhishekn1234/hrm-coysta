@@ -77,150 +77,201 @@ export default function VendorTable() {
   };
 
   return (
-    <>
-      {/* Filters */}
-      <Row className="align-items-end mb-3">
-        <Col md={4}>
-          <Form.Group controlId="search">
-            <Form.Control
-              type="text"
-              placeholder="Keyword Search"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              style={{
-                borderRadius: '12px',
-                padding: '0.6rem 1rem',
-                border: '1px solid #ced4da',
-              }}
-            />
-          </Form.Group>
-        </Col>
+   <>
+  {/* Filter Card */}
+  <div
+    className="mb-4"
+    style={{
+      backgroundColor: '#fff',
+      borderRadius: '16px',
+      boxShadow: '0 4px 16px rgba(0,0,0,0.05)',
+      padding: '24px',
+    }}
+  >
+    <Row className="g-3 align-items-center">
+      {/* Search */}
+      <Col md={4}>
+        <Form.Control
+          type="text"
+          placeholder="🔍 Keyword search..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          style={{
+            borderRadius: '12px',
+            padding: '10px 16px',
+            border: '1px solid #e2e8f0',
+          }}
+        />
+      </Col>
 
-        <Col md={4}>
-          <Form.Group controlId="organization">
-            <Form.Label style={{ fontWeight: 500 }}>Organization</Form.Label>
-            <Form.Select
-              value={organization}
-              onChange={(e) => setOrganization(e.target.value)}
-              style={{ borderRadius: '12px', padding: '0.6rem 1rem' }}
-            >
-              {organizationList.map((org, i) => (
-                <option key={i} value={org}>
-                  {org || 'All Organizations'}
-                </option>
-              ))}
-            </Form.Select>
-          </Form.Group>
-        </Col>
+      {/* Organization */}
+      <Col md={4}>
+        <Form.Select
+          value={organization}
+          onChange={(e) => setOrganization(e.target.value)}
+          style={{
+            borderRadius: '12px',
+            padding: '10px 16px',
+            color: organization ? '#0f172a' : '#64748b',
+            border: '1px solid #e2e8f0',
+          }}
+        >
+          {organizationList.map((org, idx) => (
+            <option key={idx} value={org}>
+              {org || 'All Organizations'}
+            </option>
+          ))}
+        </Form.Select>
+      </Col>
 
-        <Col md={4}>
-          <Form.Group controlId="tillDate">
-            <Form.Label style={{ fontWeight: 500 }}>Till Date</Form.Label>
-            <Form.Control
-              type="date"
-              value={tillDate}
-              onChange={(e) => setTillDate(e.target.value)}
-              style={{ borderRadius: '12px', padding: '0.6rem 1rem' }}
-            />
-          </Form.Group>
-        </Col>
-      </Row>
+      {/* Till Date */}
+      <Col md={4}>
+        <Form.Control
+          type="date"
+          value={tillDate}
+          onChange={(e) => setTillDate(e.target.value)}
+          style={{
+            borderRadius: '12px',
+            padding: '10px 16px',
+            border: '1px solid #e2e8f0',
+          }}
+        />
+      </Col>
+    </Row>
 
-      {/* Reset Filters */}
-      <Row>
-        <Col className="text-end">
-          <Button
-            variant="link"
-            onClick={resetFilters}
-            style={{ padding: 0, color: '#0d6efd', fontWeight: 500 }}
-          >
-            Reset Filters
-          </Button>
-        </Col>
-      </Row>
+    {/* Reset Filters */}
+    <div className="text-end mt-3">
+      <Button
+        variant="link"
+        onClick={resetFilters}
+        style={{
+          fontWeight: 500,
+          color: '#4f46e5',
+          padding: 0,
+          fontSize: '14px',
+        }}
+      >
+        Reset Filters
+      </Button>
+    </div>
+  </div>
 
-      {/* Vendor Table */}
-      <Table striped bordered hover responsive>
-        <thead>
+  {/* Table Container */}
+  <div
+    className="bg-white rounded-4 overflow-hidden"
+    style={{ boxShadow: '0 4px 16px rgba(0, 0, 0, 0.05)' }}
+  >
+    <Table hover responsive className="mb-0 align-middle">
+      <thead
+        style={{
+          backgroundColor: '#f8fafc',
+          textTransform: 'uppercase',
+          fontSize: '13px',
+          color: '#475569',
+        }}
+      >
+        <tr>
+          <th style={{ padding: '12px 16px' }}>Name</th>
+          <th style={{ padding: '12px 16px' }}>Contact</th>
+          <th style={{ padding: '12px 16px' }}>Type</th>
+          <th style={{ padding: '12px 16px' }}>Total Billed</th>
+          <th style={{ padding: '12px 16px' }}>Paid</th>
+          <th style={{ padding: '12px 16px' }}>Balance</th>
+          <th style={{ padding: '12px 16px' }}>Created Date</th>
+          <th style={{ padding: '12px 16px' }}>Login</th>
+        </tr>
+      </thead>
+      <tbody>
+        {loading ? (
           <tr>
-            <th>NAME</th>
-            <th>CONTACT / EMAIL</th>
-            <th>TYPE</th>
-            <th>TOTAL BILLED</th>
-            <th>PAID</th>
-            <th>BALANCE</th>
-            <th>CREATED DATE</th>
-            <th>LOGIN</th>
+            <td colSpan="8" className="text-center py-4 text-muted">
+              Loading...
+            </td>
           </tr>
-        </thead>
-        <tbody>
-          {loading ? (
-            <tr>
-              <td colSpan="8" className="text-center">
-                Loading...
+        ) : filteredVendors.length === 0 ? (
+          <tr>
+            <td colSpan="8" className="text-center py-4 text-muted">
+              No data found
+            </td>
+          </tr>
+        ) : (
+          filteredVendors.map((vendor) => (
+            <tr
+              key={vendor.id}
+              onClick={() =>
+                navigate(`/admin/people/vendors/${vendor.id}`, {
+                  state: { vendor },
+                })
+              }
+              style={{ cursor: 'pointer', transition: 'background 0.2s' }}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.backgroundColor = '#f9fafb')
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.backgroundColor = 'transparent')
+              }
+            >
+              {/* Name & Branch */}
+              <td style={{ padding: '12px 16px' }}>
+                <div style={{ fontWeight: 600 }}>{vendor.name}</div>
+                <div className="text-muted small">{vendor.branch}</div>
+              </td>
+
+              {/* Contact */}
+              <td style={{ padding: '12px 16px' }}>
+                <div>{vendor.phone || vendor.contact}</div>
+                <div className="text-muted small">{vendor.email}</div>
+              </td>
+
+              {/* Type Badge */}
+              <td style={{ padding: '12px 16px' }}>
+                <span
+                  style={{
+                    backgroundColor:
+                      vendor.type === 'Material' ? '#dbeafe' : '#fef3c7',
+                    color: '#1e40af',
+                    borderRadius: '999px',
+                    padding: '4px 12px',
+                    fontSize: '13px',
+                    fontWeight: 500,
+                    display: 'inline-block',
+                  }}
+                >
+                  {vendor.type}
+                </span>
+              </td>
+
+              {/* Billing */}
+              <td style={{ padding: '12px 16px' }}>{vendor.totalBilled || '₹0'}</td>
+              <td style={{ padding: '12px 16px' }}>{vendor.paid || '₹0'}</td>
+              <td style={{ padding: '12px 16px', color: '#dc2626', fontWeight: 'bold' }}>
+                {vendor.balance || '₹0'}
+              </td>
+
+              {/* Created Date */}
+              <td style={{ padding: '12px 16px' }}>
+                {vendor.created_at?.substring(0, 10) || vendor.createdDate}
+              </td>
+
+              {/* Login Indicator */}
+              <td className="text-center" style={{ padding: '12px 16px' }}>
+                <div
+                  style={{
+                    width: '10px',
+                    height: '10px',
+                    borderRadius: '50%',
+                    backgroundColor: vendor.login ? 'green' : 'red',
+                    margin: 'auto',
+                  }}
+                ></div>
               </td>
             </tr>
-          ) : filteredVendors.length === 0 ? (
-            <tr>
-              <td colSpan="8" className="text-center text-muted">
-                No data found
-              </td>
-            </tr>
-          ) : (
-            filteredVendors.map((vendor) => (
-              <tr
-                key={vendor.id}
-                style={{ cursor: 'pointer' }}
-                onClick={() =>
-                  navigate(`/admin/people/vendors/${vendor.id}`, {
-                    state: { vendor },
-                  })
-                }
-              >
-                <td>
-                  <div>{vendor.name}</div>
-                  <div className="text-muted small">{vendor.branch}</div>
-                </td>
-                <td>
-                  <div>{vendor.phone || vendor.contact}</div>
-                  <div className="text-muted small">{vendor.email}</div>
-                </td>
-                <td>
-                  <span
-                    style={{
-                      backgroundColor:
-                        vendor.type === 'Material' ? '#d9efff' : '#fff8cc',
-                      borderRadius: '12px',
-                      padding: '4px 12px',
-                      display: 'inline-block',
-                      fontWeight: 500,
-                    }}
-                  >
-                    {vendor.type}
-                  </span>
-                </td>
-                <td>{vendor.totalBilled || '₹0'}</td>
-                <td>{vendor.paid || '₹0'}</td>
-                <td style={{ color: 'red', fontWeight: 'bold' }}>
-                  {vendor.balance || '₹0'}
-                </td>
-                <td>{vendor.created_at?.substring(0, 10) || vendor.createdDate}</td>
-                <td>
-                  <div
-                    style={{
-                      width: '12px',
-                      height: '12px',
-                      borderRadius: '50%',
-                      backgroundColor: vendor.login ? 'green' : 'red',
-                      margin: 'auto',
-                    }}
-                  ></div>
-                </td>
-              </tr>
-            ))
-          )}
-        </tbody>
-      </Table>
-    </>
+          ))
+        )}
+      </tbody>
+    </Table>
+  </div>
+</>
+
   );
 }

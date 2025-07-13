@@ -22,6 +22,7 @@ export default function Skills({ selectedSkills, setSelectedSkills }) {
           <option>Video Design</option>
           <option>Transportation</option>
           <option>Asst.Technician</option>
+          
         </Form.Select>
         <Form.Text muted>
           Hold Ctrl/Cmd to select multiple.

@@ -6,6 +6,7 @@ import {
   useLocation,
   useNavigate,
 } from "react-router-dom";
+import './my.css';
 import Dashboard from "./Dashboard";
 import StaffTable from "./StaffTable";
 import CustomerCards from "./CustomerCards";
@@ -37,6 +38,7 @@ function AppRoutes() {
           element={
             <>
               <Dashboard />
+              <br/>
               <StaffTable />
             </>
           }

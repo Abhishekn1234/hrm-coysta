@@ -660,13 +660,13 @@ public function getBenefit($userId)
             : response()->json(['message' => 'Benefit not found'], 404);
     }
     public function getBenefits()
-            {
+    {
                 $benefits = Benefit::all();
 
                 return $benefits->isEmpty()
                     ? response()->json(['message' => 'No benefits found'], 404)
                     : response()->json($benefits);
-            }
+    }
 
 
     // ✅ Add a new benefit record

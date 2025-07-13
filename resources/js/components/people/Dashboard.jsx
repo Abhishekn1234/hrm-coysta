@@ -1,12 +1,7 @@
-import React from 'react';
-import { Row, Col, Card, Form, Button } from 'react-bootstrap';
-import {
-  PeopleFill,
-  PersonCheckFill,
-  PersonDashFill,
-  Calendar2MonthFill
-} from 'react-bootstrap-icons';
-import { useState,useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { Users, UserCheck, UserX, Gift } from 'lucide-react';
+
 export default function Dashboard() {
   const [counts, setCounts] = useState({
     total: 0,
@@ -14,8 +9,8 @@ export default function Dashboard() {
     inactive: 0,
     monthly: 0
   });
+
   useEffect(() => {
-    // Fetch total/active/inactive counts
     const fetchCounts = async () => {
       try {
         const res = await axios.get('http://127.0.0.1:8000/api/staff/counts');
@@ -30,12 +25,10 @@ export default function Dashboard() {
       }
     };
 
-    // Fetch latest month staff count
     const fetchMonthly = async () => {
       try {
         const res = await axios.get('http://127.0.0.1:8000/api/staff/monthly');
         const latestMonth = res.data?.[res.data.length - 1]?.count || 0;
-
         setCounts((prev) => ({
           ...prev,
           monthly: latestMonth
@@ -48,72 +41,92 @@ export default function Dashboard() {
     fetchCounts();
     fetchMonthly();
   }, []);
+
   const cards = [
     {
       title: 'Total Staff',
       value: counts.total,
-      icon: <PeopleFill size={24} className="text-primary" />,
+      icon: <Users size={20} color="#1d4ed8" />,
+      bg: '#e0edff'
     },
     {
       title: 'Active',
       value: counts.active,
-      icon: <PersonCheckFill size={24} className="text-primary" />,
+      icon: <UserCheck size={20} color="#16a34a" />,
+      bg: '#e6f6ec'
     },
     {
       title: 'Inactive',
       value: counts.inactive,
-      icon: <PersonDashFill size={24} className="text-primary" />,
+      icon: <UserX size={20} color="#dc2626" />,
+      bg: '#fdeaea'
     },
     {
       title: 'Monthly Staff',
       value: counts.monthly,
-      icon: <Calendar2MonthFill size={24} className="text-primary" />,
+      icon: <Gift size={20} color="#9333ea" />,
+      bg: '#f3e8ff'
     }
   ];
 
+  const containerStyle = {
+    display: 'flex',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    gap: '20px',
+    marginTop: '30px'
+  };
+
+  const cardStyle = {
+    backgroundColor: '#ffffff',
+    borderRadius: '16px', // more rounded
+    boxShadow: '0 4px 24px rgba(0, 0, 0, 0.06)', // soft shadow like screenshot
+    padding: '20px 24px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    flex: '1 1 calc(25% - 20px)',
+    minWidth: '230px',
+    maxWidth: '100%',
+    height: '100px'
+  };
+
+  const iconWrapperStyle = (bg) => ({
+    backgroundColor: bg,
+    borderRadius: '50%',
+    width: '48px',
+    height: '48px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: '16px',
+    flexShrink: 0
+  });
+
+  const valueStyle = {
+    fontWeight: '700',
+    fontSize: '20px',
+    color: '#1f2937', // #111827 in hex
+    lineHeight: '1.2'
+  };
+
+  const labelStyle = {
+    fontSize: '14px',
+    color: '#6b7280',
+    marginTop: '2px'
+  };
+
   return (
-    <>
-      {/* Stats Cards Row */}
-      {/* Stats Cards Row */}
-      
-<Row className="mb-4 g-4">
+    <div style={containerStyle}>
       {cards.map((card, idx) => (
-        <Col key={idx} lg={3} md={6} sm={12}>
-          <Card
-            style={{
-              borderRadius: '12px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-              padding: '1.2rem',
-              height: '100%',
-            }}
-          >
-            <Card.Body className="d-flex align-items-center">
-              <div
-                style={{
-                  backgroundColor: '#f1f1f1', // Light grey background for icon circle
-                  borderRadius: '50%',
-                  padding: '10px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  marginRight: '1rem',
-                }}
-              >
-                {card.icon}
-              </div>
-              <div>
-                <h6 style={{ marginBottom: '0.25rem', fontWeight: 600 }}>{card.title}</h6>
-                <h4 style={{ margin: 0 }}>{card.value}</h4>
-              </div>
-            </Card.Body>
-          </Card>
-        </Col>
+        <div key={idx} style={cardStyle}>
+          <div style={iconWrapperStyle(card.bg)}>{card.icon}</div>
+          <div>
+            <div style={valueStyle}>{card.value}</div>
+            <div style={labelStyle}>{card.title}</div>
+          </div>
+        </div>
       ))}
-    </Row>
-
-
-      {/* Filters Section */}
-      
-    </>
+    </div>
   );
 }

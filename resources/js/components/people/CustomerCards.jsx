@@ -1,14 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Card, Row, Col, Form, InputGroup } from 'react-bootstrap';
-import {
-  FaUsers,
-  FaBuilding,
-  FaUser,
-  FaSearch,
-  FaFilter,
-  FaUndo,
-} from 'react-icons/fa';
+import { Row, Col } from 'react-bootstrap';
+import { Users, Building2, User2 } from 'lucide-react';
 
 export default function CustomerCards() {
   const [counts, setCounts] = useState({
@@ -17,17 +10,8 @@ export default function CustomerCards() {
     individual: 0,
   });
 
-  const [filters, setFilters] = useState({
-    search: '',
-    organization: '',
-    date: '',
-  });
-
-  const [customers, setCustomers] = useState([]);
-
   useEffect(() => {
     fetchCounts();
-    fetchCustomers();
   }, []);
 
   const fetchCounts = async () => {
@@ -48,79 +32,81 @@ export default function CustomerCards() {
     }
   };
 
-  const fetchCustomers = async () => {
-    try {
-      const res = await axios.get('http://127.0.0.1:8000/api/customer/customers');
-      setCustomers(res.data);
-    } catch (err) {
-      console.error('Error fetching customers:', err);
-    }
+  const boxStyle = {
+    backgroundColor: '#ffffff',
+    borderRadius: '16px',
+    boxShadow: '0px 8px 24px rgba(149, 157, 165, 0.2)',
+    padding: '20px',
+    minHeight: '100px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '16px',
   };
 
-  const handleReset = () => {
-    setFilters({ search: '', organization: '', date: '' });
+  const iconCircleStyle = {
+    width: '48px',
+    height: '48px',
+    borderRadius: '50%',
+    backgroundColor: '#f1f5f9',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  };
+
+  const valueTextStyle = {
+    fontSize: '20px',
+    fontWeight: '700',
+    color: '#0f172a',
+  };
+
+  const labelTextStyle = {
+    fontSize: '14px',
+    color: '#64748b',
   };
 
   return (
-    <div className="mb-5 px-3">
-      {/* Summary Cards */}
-      <div style={{ paddingRight: '10rem' }}>
-        <Row className="g-4 my-4">
-          {/* Total Customers */}
-          <Col md={4}>
-            <Card className="h-100 shadow-sm border-0" style={{ borderRadius: '16px', minHeight: '120px' }}>
-              <Card.Body className="d-flex align-items-center">
-                <div className="bg-light text-primary d-flex align-items-center justify-content-center me-3"
-                     style={{ width: '48px', height: '48px', borderRadius: '12px' }}>
-                  <FaUsers size={24} />
-                </div>
-                <div>
-                  <div className="text-muted fw-semibold">Total Customers</div>
-                  <div className="h4 fw-bold mb-0">{customers.length}</div>
-                </div>
-              </Card.Body>
-            </Card>
-          </Col>
+    <Row
+      className="my-4"
+      style={{ gap: '24px', justifyContent: 'flex-start', paddingLeft: '8px', paddingRight: '8px', flexWrap: 'wrap' }}
+    >
+      {/* Total Vendors */}
+      <Col style={{ flex: '0 0 310px', maxWidth: '310px' }}>
+        <div style={boxStyle}>
+          <div style={iconCircleStyle}>
+            <Users size={20} color="#3b82f6" />
+          </div>
+          <div>
+            <div style={valueTextStyle}>{counts.total}</div>
+            <div style={labelTextStyle}>Total Customers</div>
+          </div>
+        </div>
+      </Col>
 
-          {/* Business */}
-          <Col md={4}>
-            <Card className="h-100 shadow-sm border-0" style={{ borderRadius: '16px', minHeight: '120px' }}>
-              <Card.Body className="d-flex align-items-center">
-                <div className="bg-light text-primary d-flex align-items-center justify-content-center me-3"
-                     style={{ width: '48px', height: '48px', borderRadius: '12px' }}>
-                  <FaBuilding size={24} />
-                </div>
-                <div>
-                  <div className="text-muted fw-semibold">Business</div>
-                  <div className="h4 fw-bold mb-0">{counts.business}</div>
-                </div>
-              </Card.Body>
-            </Card>
-          </Col>
+      {/* Material */}
+      <Col style={{ flex: '0 0 310px', maxWidth: '310px' }}>
+        <div style={boxStyle}>
+          <div style={iconCircleStyle}>
+            <Building2 size={20} color="#22c55e" />
+          </div>
+          <div>
+            <div style={valueTextStyle}>{counts.business}</div>
+            <div style={labelTextStyle}>Business</div>
+          </div>
+        </div>
+      </Col>
 
-          {/* Individual */}
-          <Col md={4}>
-            <Card className="h-100 shadow-sm border-0" style={{ borderRadius: '16px', minHeight: '120px' }}>
-              <Card.Body className="d-flex align-items-center">
-                <div className="bg-light text-primary d-flex align-items-center justify-content-center me-3"
-                     style={{ width: '48px', height: '48px', borderRadius: '12px' }}>
-                  <FaUser size={24} />
-                </div>
-                <div>
-                  <div className="text-muted fw-semibold">Individual</div>
-                  <div className="h4 fw-bold mb-0">{counts.individual}</div>
-                </div>
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
-      </div>
-
-      {/* Filter/Search Panel */}
-      
-
-      {/* Customer Cards */}
-    
-    </div>
+      {/* Service */}
+      <Col style={{ flex: '0 0 310px', maxWidth: '310px' }}>
+        <div style={boxStyle}>
+          <div style={iconCircleStyle}>
+            <User2 size={20} color="#a855f7" />
+          </div>
+          <div>
+            <div style={valueTextStyle}>{counts.individual}</div>
+            <div style={labelTextStyle}>Individual</div>
+          </div>
+        </div>
+      </Col>
+    </Row>
   );
 }

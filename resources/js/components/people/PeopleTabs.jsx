@@ -3,6 +3,12 @@ import { Container, Row, Col, Button, Modal,Tabs,Tab,AccordionContext, Form, Acc
 import { FaUsers, FaUserFriends, FaUserTie,FaPlus, FaUser,FaTrash, FaPhone,FaUpload, FaDollarSign, FaCertificate, FaFileAlt, FaBuilding} from 'react-icons/fa';
 import { BsChevronRight, BsChevronDown } from "react-icons/bs";
 import { useNavigate,useLocation } from 'react-router-dom';
+import { Plus ,User,Phone,Users, Briefcase ,UserCircle,Receipt, MapPin,PhoneCall,
+  DollarSign,
+  Award,
+  FileText,
+  Banknote} from 'lucide-react';
+
 import StaffDetails from './StaffDetails';
 import ContactForm from './ContactForm';
 import FinancialHR from './FinancialHr';
@@ -501,188 +507,282 @@ const handleContactChanges = (index, field, value) => {
   return (
     <>
       {/* Header */}
-      <Row className="align-items-center mb-4" >
-        <Col>
-          <h2 style={{ fontWeight: '700', marginBottom: '0.3rem' }}>People</h2>
-          <p style={{ color: '#6c757d', marginBottom: 0 }}>
-            Manage all your staff, customers, and vendors in one place.
-          </p>
-        </Col>
-        <Col className="text-end">
-           <Button
-          className="text-white"
-          style={{
-            backgroundColor: "#0d6efd",
-            border: "none",
-            padding: "0.5rem 1.2rem",
-            borderRadius: "10px",
-            fontWeight: "600",
-            fontSize: "15px",
-            boxShadow: "0 3px 6px rgba(0,0,0,0.1)",
-          }} onClick={handleAddClick}
-        >
-          <i className="bi bi-plus-lg me-2"></i>
-          {activeTab === "staff"
-            ? "Add New Staff"
-            : activeTab === "customers"
-            ? "Add New Customer"
-            : activeTab === "vendors"
-            ? "Add New Vendor"
-            : "Add New"}
-        </Button>
-        </Col>
-      </Row>
+      <Row className="align-items-center mb-4">
+  <Col>
+    <h2 style={{ 
+      fontWeight: '700', 
+      fontSize: '1.5rem', 
+      marginBottom: '0.3rem',
+      color: '#333'
+    }}>
+      People
+    </h2>
+    <p style={{ 
+      color: '#6c757d', 
+      marginBottom: 0,
+      fontSize: '0.9rem'
+    }}>
+      Manage all your staff, customers, and vendors in one place.
+    </p>
+  </Col>
+  <Col className="text-end">
+    <div style={{
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: '0.5rem'
+    }}>
+      <button
+        style={{
+          backgroundColor: "#0d6efd",
+          color: "white",
+          border: "none",
+          padding: "0.5rem 1rem",
+          borderRadius: "0.375rem",
+          fontWeight: "500",
+          fontSize: "0.875rem",
+          display: "inline-flex",
+          alignItems: "center",
+          cursor: "pointer",
+          transition: "background-color 0.2s"
+        }}
+        onClick={handleAddClick}
+      >
+        <Plus size={16} style={{ marginRight: '0.5rem' }} />
+        {activeTab === "staff"
+          ? "Add New Staff"
+          : activeTab === "customers"
+          ? "Add New Customer"
+          : activeTab === "vendors"
+          ? "Add New Vendor"
+          : "Add New"}
+      </button>
+    </div>
+  </Col>
+  </Row>
 
    
-  <div
-  style={{
-    background: '#fff',
-    borderRadius: '12px',
-    padding: '1rem',
-    position: 'relative',
-  }}
->
-  {/* Sticky Tab Header */}
-  <div
-    style={{
-      position: isSticky ? "fixed" : "static",
-      top: isSticky ? "60px" : "auto",
-      zIndex: 1055,
-      backgroundColor: "#fff",
-      width: "100%",
-      maxWidth: "100%", // Full width but controlled inside
-      padding: "0.75rem 2rem 0.75rem 1rem", // ✅ right padding for space
-      borderRadius: "12px",
-      borderBottom: "1px solid #dee2e6",
-      boxShadow: isSticky ? "0 2px 4px rgba(0,0,0,0.1)" : "none",
-      transition: "top 0.2s ease",
-    }}
-  >
-    <div
+<div
       style={{
-        display: "flex",
-        justifyContent: "flex-start",  // ✅ Align left
-        maxWidth: "800px",             // ✅ Optional limit
+        background: '#fff',
+        borderRadius: '12px',
+        padding: '1rem',
+        position: 'relative',
       }}
     >
-      <Tabs
-        id="people-tabs"
-        activeKey={getActiveTab()}
-        onSelect={(k) => {
-          if (k === "staff") navigate("/admin/people");
-          else if (k === "customers") navigate("/customer");
-          else if (k === "vendors") navigate("/vendor");
-        }}
-        className="custom-tabs"
+      <div
         style={{
-          display: "flex",
-          width: "100%",
-          gap: "1rem",
+          position: isSticky ? 'fixed' : 'static',
+          top: isSticky ? '60px' : 'auto',
+          zIndex: 1055,
+          backgroundColor: '#fff',
+          width: '100%',
+          maxWidth: '100%',
+          padding: '0.75rem 2rem 0.75rem 1rem',
+          borderRadius: '12px',
+          
+          boxShadow: isSticky ? '0 2px 4px rgba(0,0,0,0.1)' : 'none',
+          transition: 'top 0.2s ease',
         }}
       >
-        <Tab
-          eventKey="staff"
-          title={<><FaUsers className="tab-icon me-1" /> Staff</>}
-          tabClassName="me-3"
-        />
-        <Tab
-          eventKey="customers"
-          title={<><FaUserFriends className="tab-icon me-1" /> Customers</>}
-          tabClassName="me-3"
-        />
-        <Tab
-          eventKey="vendors"
-          title={<><FaUserTie className="tab-icon me-1" /> Vendors</>}
-          tabClassName="me-3"
-        />
-      </Tabs>
-    </div>
-  </div>
-</div>
-
-
-
-
-       <Modal show={showStaffModal} onHide={() => setShowStaffModal(false)} size="lg" centered scrollable>
-        <Modal.Header closeButton>
-          <Modal.Title className="fw-bold">Add New Staff</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          {/* Login toggle and organization */}
-         <div className="d-flex justify-content-between align-items-center mb-4 bg-light rounded p-3">
-  {/* Left: Login Switch */}
-  <div className="d-flex align-items-center">
-    <span className="fw-semibold me-2">Login is enabled</span>
-    <Form.Check
-      type="switch"
-      id="login-switch"
-      checked={loginEnabled}
-      onChange={(e) => setLoginEnabled(e.target.checked)}
-    />
-  </div>
-
-  {/* Right: Organization Select */}
-  <div style={{ width: '50%' }}>
-    <Form.Label className="fw-semibold">
-      Organization <span className="text-danger">*</span>
-    </Form.Label>
-    <Form.Select
-  value={organization}
-  onChange={(e) => setOrganization(e.target.value)}
-  required
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'flex-start',
+            maxWidth: '800px',
+          }}
+        >
+          <Tabs
+  id="people-tabs"
+  activeKey={getActiveTab()}
+  onSelect={(k) => {
+    if (k === 'staff') navigate('/admin/people');
+    else if (k === 'customers') navigate('/customer');
+    else if (k === 'vendors') navigate('/vendor');
+  }}
+  style={{
+    display: 'flex',
+    width: '100%',
+    gap: '0.5rem', // Increased gap for more breathing space
+  }}
+  variant="tabs"
 >
-  <option value="">Select Organization</option>
-  <option value="Kochi Organization">Kochi Organization</option>
-  <option value="Kozhikode Organization">Kozhikode Organization</option>
-  <option value="Trivandrum Organization">Trivandrum Organization</option>
-</Form.Select>
+  <Tab
+    eventKey="staff"
+    title={
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <Users size={16} strokeWidth={2.2} />
+        <span>Staff</span>
+      </div>
+    }
+    tabClassName="me-3"
+  />
+  <Tab
+    eventKey="customers"
+    title={
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <Briefcase size={16} strokeWidth={2.2} />
+        <span>Customers</span>
+      </div>
+    }
+    tabClassName="me-3"
+  />
+  <Tab
+    eventKey="vendors"
+    title={
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <User size={16} strokeWidth={2.2} />
+        <span>Vendors</span>
+      </div>
+    }
+    tabClassName="me-3"
+  />
+</Tabs>
 
-  </div>
-</div>
+        </div>
+      </div>
+    </div>
 
 
 
-          {/* Accordion Sections */}
-                <Accordion alwaysOpen>
-            <Accordion.Item eventKey="0">
-        <CustomAccordionToggle eventKey="0" icon={<FaUser />}>Staff Details</CustomAccordionToggle>
-        <Accordion.Body className="pb-4 ps-4 pe-4">
-            <Staffdeta
-          data={staffFormData}
-          setData={setStaffFormData}
-        />
-        </Accordion.Body>
-        </Accordion.Item>
+       <Modal
+      show={showStaffModal}
+      onHide={()=>{setShowStaffModal(false)}}
+      size="lg"
+      centered
+      scrollable
+      style={{ borderRadius: '16px' }}
+    >
+      <Modal.Header closeButton style={{ borderBottom: '1px solid #f1f5f9', padding: '1rem 1.5rem' }}>
+        <Modal.Title style={{ fontWeight: 'bold', fontSize: '1.3rem', color: '#0f172a' }}>
+          Add New Staff
+        </Modal.Title>
+      </Modal.Header>
 
+     <Modal.Body
+  style={{
+    padding: '1.5rem',
+    maxHeight: '70vh',
+    overflowY: 'auto',
+    WebkitOverflowScrolling: 'touch', // smooth scrolling on iOS
+    scrollbarWidth: 'thin', // Firefox
+    scrollbarColor: '#cbd5e1 #f1f5f9', // Firefox fallback
+  }}
+>
+        <div
+          style={{
+            backgroundColor: '#f8fafc',
+            borderRadius: '12px',
+            padding: '1.2rem',
+            
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '1.5rem',
+            border: '1px solid #e2e8f0',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <span style={{ fontWeight: 600, marginRight: '0.5rem', fontSize: '0.95rem', color: '#0f172a' }}>
+              Login is enable
+            </span>
+            <Form.Check
+              type="switch"
+              id="login-switch"
+              checked={loginEnabled}
+              onChange={(e) => setLoginEnabled(e.target.checked)}
+              style={{ transform: 'scale(1.1)' }}
+            />
+          </div>
 
-            <Accordion.Item eventKey="1">
-        <CustomAccordionToggle eventKey="1" icon={<FaPhone />}>Contact Information</CustomAccordionToggle>
-        <Accordion.Body className="pb-4 ps-4 pe-4">
-            <ContactForms data={contactFormData} setData={setContactFormData}  />
-        </Accordion.Body>
-        </Accordion.Item>
+          <div style={{ width: '50%' }}>
+            <Form.Label style={{ fontWeight: 600, fontSize: '0.95rem', color: '#0f172a', marginBottom: '0.5rem' }}>
+              Organization <span className="text-danger">*</span>
+            </Form.Label>
+            <Form.Select
+              value={organization}
+              onChange={(e) => setOrganization(e.target.value)}
+              required
+              style={{ borderRadius: '10px', padding: '0.6rem 1rem', fontSize: '0.95rem', border: '1px solid #cbd5e1' }}
+            >
+              <option value="">Select Organization</option>
+              <option value="Kochi Organization">Kochi Organization</option>
+              <option value="Kozhikode Organization">Kozhikode Organization</option>
+              <option value="Trivandrum Organization">Trivandrum Organization</option>
+            </Form.Select>
+          </div>
+        </div>
 
-                <Accordion.Item eventKey="2">
-            <CustomAccordionToggle eventKey="2" icon={<FaDollarSign />}>Financial & HR Details</CustomAccordionToggle>
-            <Accordion.Body className="pb-4 ps-4 pe-4">
-              <FinancialHRs
-                  data={financialFormData}
-                  setData={setFinancialFormData}
-                />
+        <Accordion alwaysOpen defaultActiveKey="0">
+          <Accordion.Item 
+  eventKey="0" 
+  style={{ 
+    border: 'none',
+    borderRadius: '8px',
+    marginBottom: '10px',
+    overflow: 'hidden',
+    transition: 'all 0.2s ease'
+  }}
+>
+  <CustomAccordionToggle 
+    eventKey="0" 
+    style={{ 
+      backgroundColor: '#f8fafc',
+      borderBottom: '1px solid #e2e8f0'
+    }} icon={<User size={18} color="#7c3aed" />}
+  >
+    Staff Details
+  </CustomAccordionToggle>
+  <Accordion.Body style={{ padding: '1.5rem 1rem 0.5rem' }}>
+    <Staffdeta data={staffFormData} setData={setStaffFormData} />
+  </Accordion.Body>
+</Accordion.Item>
+
+          <Accordion.Item eventKey="1" style={{ 
+    border: 'none',
+    borderRadius: '8px',
+    marginBottom: '10px',
+    overflow: 'hidden',
+    transition: 'all 0.2s ease'
+  }}>
+            <CustomAccordionToggle eventKey="1" icon={<Phone color="#7c3aed" />} >Contact Information</CustomAccordionToggle>
+            <Accordion.Body style={{ padding: '1.5rem 1rem 0.5rem' }}>
+              <ContactForms data={contactFormData} setData={setContactFormData} />
             </Accordion.Body>
-            </Accordion.Item>
+          </Accordion.Item>
 
+          <Accordion.Item eventKey="2"style={{ 
+    border: 'none',
+    borderRadius: '8px',
+    marginBottom: '10px',
+    overflow: 'hidden',
+    transition: 'all 0.2s ease'
+  }}>
+            <CustomAccordionToggle eventKey="2" icon={<DollarSign color="#7c3aed" />}>Financial & HR Details</CustomAccordionToggle>
+            <Accordion.Body style={{ padding: '1.5rem 1rem 0.5rem' }}>
+              <FinancialHRs data={financialFormData} setData={setFinancialFormData} />
+            </Accordion.Body>
+          </Accordion.Item>
 
-      <Accordion.Item eventKey="3">
-        <CustomAccordionToggle eventKey="3" icon={<FaCertificate />}>Skills</CustomAccordionToggle>
-        <Accordion.Body className="pb-4 ps-4 pe-4"> <Skill
-        selectedSkills={selectedSkills}
-        setSelectedSkills={setSelectedSkills}
-      /> </Accordion.Body>
-      </Accordion.Item>
-
-     <Accordion.Item eventKey="4">
-  <CustomAccordionToggle eventKey="4" icon={<FaFileAlt />}>Documents</CustomAccordionToggle>
+          <Accordion.Item eventKey="3" style={{ 
+    border: 'none',
+    borderRadius: '8px',
+    marginBottom: '10px',
+    overflow: 'hidden',
+    transition: 'all 0.2s ease'
+  }}>
+            <CustomAccordionToggle eventKey="3" icon={<Award color="#7c3aed" />}>Skills</CustomAccordionToggle>
+            <Accordion.Body style={{ padding: '1.5rem 1rem 0.5rem' }}>
+              <Skill selectedSkills={selectedSkills} setSelectedSkills={setSelectedSkills} />
+            </Accordion.Body>
+          </Accordion.Item>
+          <Accordion.Item eventKey="4"style={{ 
+    border: 'none',
+    borderRadius: '8px',
+    marginBottom: '10px',
+    overflow: 'hidden',
+    transition: 'all 0.2s ease'
+  }}>
+  <CustomAccordionToggle eventKey="4" icon={<FileText />}>Documents</CustomAccordionToggle>
 <Accordion.Body className="pb-4 ps-4">
  <div className="row">
         {uploadFields.map(({ id, label, key }) => (
@@ -712,8 +812,14 @@ const handleContactChanges = (index, field, value) => {
 
 </Accordion.Item>
 
-      <Accordion.Item eventKey="5">
-  <CustomAccordionToggle eventKey="5" icon={<FaBuilding />}>Bank Details</CustomAccordionToggle>
+      <Accordion.Item eventKey="5"style={{ 
+    border: 'none',
+    borderRadius: '8px',
+    marginBottom: '10px',
+    overflow: 'hidden',
+    transition: 'all 0.2s ease'
+  }}>
+  <CustomAccordionToggle eventKey="5" icon={<Banknote />}>Bank Details</CustomAccordionToggle>
   <Accordion.Body className="pb-4 ps-4">
   <div className="row">
         {/* Date */}
@@ -755,7 +861,7 @@ const handleContactChanges = (index, field, value) => {
         </div>
 
         {/* File Upload */}
-        <div className="col-md-6 mb-3">
+        <div className="col-md-12 mb-3">
           <label className="form-label">Bank Document</label>
           <div className="file-uploads-box">
             <input
@@ -773,7 +879,7 @@ const handleContactChanges = (index, field, value) => {
                 <strong>Click to upload</strong> or drag and drop
               </div>
               {bankFormData.bank_document_file && (
-                <div className="mt-2 text-success small">
+                <div className=" text-success large">
                   {bankFormData.bank_document_file.name}
                 </div>
               )}
@@ -783,31 +889,38 @@ const handleContactChanges = (index, field, value) => {
       </div>
   </Accordion.Body>
 </Accordion.Item>
+        </Accordion>
+        
+      </Modal.Body>
 
-    </Accordion>
-        </Modal.Body>
-
-        <Modal.Footer>
-          <Button variant="outline-secondary" onClick={handleClose}>
-            Cancel
-          </Button>
-          <Button
+      <Modal.Footer
         style={{
-          backgroundColor: '#5c6ac4',
-          border: 'none',
-          padding: '0.45rem 1.2rem',
-          borderRadius: '8px',
-          fontWeight: '600',
-          fontSize: '15px',
+          padding: '1rem 1.5rem',
+          borderTop: '1px solid #f1f5f9',
+          backgroundColor:"lightcyan",
+          display: 'flex',
+          justifyContent: 'flex-end',
         }}
-        onClick={handleSave}
-        disabled={loading}
       >
-        {loading ? 'Saving...' : 'Save Staff'}
-      </Button>
-
-        </Modal.Footer>
-      </Modal>
+        <Button variant="outline-secondary" onClick={handleClose} style={{ marginRight: '1rem' }}>
+          Cancel
+        </Button>
+        <Button
+          onClick={handleSave}
+          disabled={loading}
+          style={{
+            backgroundColor: 'blue',
+            border: 'none',
+            padding: '0.45rem 1.2rem',
+            borderRadius: '8px',
+            fontWeight: '600',
+            fontSize: '15px',
+          }}
+        >
+          {loading ? 'Saving...' : 'Save Staff'}
+        </Button>
+      </Modal.Footer>
+    </Modal>
 
    {/* Customer Modal */}
 
@@ -815,36 +928,63 @@ const handleContactChanges = (index, field, value) => {
     <Modal.Header closeButton>
           <Modal.Title className="fw-bold">Add New Customer</Modal.Title>
         </Modal.Header>
-        <div className="d-flex justify-content-between align-items-center mb-4 bg-light rounded p-3">
-            <div>
-              <span className="fw-semibold">Login is enable</span>
-              <Form.Check
-                type="switch"
-                id="login-switch"
-                checked={loginEnabled}
-                onChange={(e) => setLoginEnabled(e.target.checked)}
-                className="ms-3 d-inline-block"
-              />
-            </div>
-            <div style={{ width: '50%' }}>
-              <Form.Label className="fw-semibold">Organization <span className="text-danger">*</span></Form.Label>
-              <Form.Select
-                value={organization}
-                onChange={(e) => setOrganization(e.target.value)}
-              >
-               <option value="">Select Organization</option>
-              <option>Kochi Organization</option>
-              <option>Bangalore Organization</option>
-              <option>Kozhikode Organization</option>
+        <hr/>
+       <div
+  style={{
+    backgroundColor: '#f8f9fa', // Bootstrap light
+    borderRadius: '8px',
+    padding: '1rem',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '1.5rem',
+    border: '1px solid #e0e0e0',
+    marginLeft:"42px",
+    marginRight:"42px"
+  }}
+>
+  <div style={{ display: 'flex', alignItems: 'center' }}>
+    <span style={{ fontWeight: 600, color: '#212529' }}>Login is enable</span>
+    <Form.Check
+      type="switch"
+      id="login-switch"
+      checked={loginEnabled}
+      onChange={(e) => setLoginEnabled(e.target.checked)}
+      style={{ marginLeft: '0.75rem' }}
+    />
+  </div>
 
-              </Form.Select>
-            </div>
-          </div>
-          <Modal.Body>
+  <div style={{ width: '50%' }}>
+    <Form.Label style={{ fontWeight: 600, color: '#212529', marginBottom: '0.5rem' }}>
+      Organization <span style={{ color: 'red' }}>*</span>
+    </Form.Label>
+    <Form.Select
+      value={organization}
+      onChange={(e) => setOrganization(e.target.value)}
+    >
+      <option value="">Select Organization</option>
+      <option>Kochi Organization</option>
+      <option>Bangalore Organization</option>
+      <option>Kozhikode Organization</option>
+    </Form.Select>
+  </div>
+</div>
+
+          <Modal.Body style={{  padding: '1.5rem',
+    maxHeight: '70vh',
+    overflowY: 'auto',
+    WebkitOverflowScrolling: 'touch', // smooth scrolling on iOS
+    scrollbarWidth: 'thin', // Firefox
+    scrollbarColor: '#cbd5e1 #f1f5f9',}}> 
              <Accordion activeKey={activeKey} onSelect={(k) => setActiveKey(k)}>
   {/* Primary Details */}
   <Card className="mb-3">
-    <CustomAccordionToggle eventKey="0">Primary Details</CustomAccordionToggle>
+    <CustomAccordionToggle eventKey="0">
+  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+    <UserCircle size={18} strokeWidth={2} />
+    <span>Primary Details</span>
+  </div>
+</CustomAccordionToggle>
     <Accordion.Collapse eventKey="0">
       <Card.Body>
         <Form>
@@ -981,7 +1121,12 @@ const handleContactChanges = (index, field, value) => {
 
   {/* GST Details */}
  <Card className="mb-3">
-  <CustomAccordionToggle eventKey="1">GST Details</CustomAccordionToggle>
+ <CustomAccordionToggle eventKey="1">
+  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+    <Receipt size={18} strokeWidth={2} />
+    <span>GST Details</span>
+  </div>
+</CustomAccordionToggle>
   <Accordion.Collapse eventKey="1">
     <Card.Body>
       <Form>
@@ -1032,7 +1177,12 @@ const handleContactChanges = (index, field, value) => {
 
   {/* Shipping Addresses */}
  <Card className="mb-3">
-  <CustomAccordionToggle eventKey="2">Shipping Addresses</CustomAccordionToggle>
+ <CustomAccordionToggle eventKey="2">
+  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+    <MapPin size={18} strokeWidth={2} />
+    <span>Shipping Addresses</span>
+  </div>
+</CustomAccordionToggle>
   <Accordion.Collapse eventKey="2">
     <Card.Body>
       {/* Existing addresses */}
@@ -1153,7 +1303,12 @@ const handleContactChanges = (index, field, value) => {
 
   {/* Contact Persons */}
   <Card className="mb-3">
-    <CustomAccordionToggle eventKey="3">Contact Persons</CustomAccordionToggle>
+  <CustomAccordionToggle eventKey="3">
+  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+    <PhoneCall size={18} strokeWidth={2} />
+    <span>Contact Persons</span>
+  </div>
+</CustomAccordionToggle>
     <Accordion.Collapse eventKey="3">
       <Card.Body>
         {contactPersons.map((person, index) => (
@@ -1262,9 +1417,18 @@ const handleContactChanges = (index, field, value) => {
       <Modal.Header closeButton style={{ backgroundColor: '#f8f9fa' }}>
         <Modal.Title className="fw-semibold">Add New Vendor</Modal.Title>
       </Modal.Header>
-
+    
       {/* Login & Org Selection Section */}
-      <div className="d-flex justify-content-between align-items-center mb-4 bg-light rounded px-4 py-3">
+      <div style={{ backgroundColor: '#f8f9fa', // Bootstrap light
+    borderRadius: '8px',
+    padding: '1rem',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '1.5rem',
+    border: '1px solid #e0e0e0',
+    marginLeft:"42px",
+    marginRight:"42px"}}>
         <div className="d-flex align-items-center">
           <span className="fw-semibold me-3">Login is enabled</span>
           <Form.Check
@@ -1293,11 +1457,21 @@ const handleContactChanges = (index, field, value) => {
         </div>
       </div>
 
-     <Modal.Body>
+     <Modal.Body style={{  padding: '1.5rem',
+    maxHeight: '70vh',
+    overflowY: 'auto',
+    WebkitOverflowScrolling: 'touch', // smooth scrolling on iOS
+    scrollbarWidth: 'thin', // Firefox
+    scrollbarColor: '#cbd5e1 #f1f5f9',border:"none"}}>
         <Accordion defaultActiveKey="0" alwaysOpen>
           {/* Vendor Details */}
-          <Accordion.Item eventKey="0">
-            <CustomAccordionToggle eventKey="0">Vendor Details</CustomAccordionToggle>
+          <Accordion.Item eventKey="0" style={{ border: 'none', boxShadow: 'none' }}>
+            <CustomAccordionToggle eventKey="0">
+  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+    <Briefcase size={18} strokeWidth={2} />
+    <span>Vendor Details</span>
+  </div>
+</CustomAccordionToggle>
             <Accordion.Body>
               <Row className="mb-3">
                 <Col md={4}>
@@ -1366,8 +1540,13 @@ const handleContactChanges = (index, field, value) => {
           </Accordion.Item>
 
           {/* Contact Persons */}
-          <Accordion.Item eventKey="1">
-            <CustomAccordionToggle eventKey="1">Contact Persons</CustomAccordionToggle>
+          <Accordion.Item eventKey="1" style={{ border: 'none', boxShadow: 'none' }}>
+           <CustomAccordionToggle eventKey="1">
+  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+    <Users size={18} strokeWidth={2} />
+    <span>Contact Persons</span>
+  </div>
+</CustomAccordionToggle>
             <Accordion.Body>
               {contacts.length === 0 && (
                 <div className="text-end mb-3">

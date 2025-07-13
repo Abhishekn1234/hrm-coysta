@@ -1,13 +1,3 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-/* Custom fonts (if needed) */
-@layer base {
-  html {
-    font-family: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
-  }
-}
 .table-wrapper {
   overflow-x: auto;
   background-color: #fff;
@@ -103,17 +93,4 @@
   text-align: center;
   padding: 24px;
   color: #6b7280;
-}
-
-/* Optional custom CSS */
-@media print {
-  .no-print {
-    display: none !important;
-  }
-}
-
-@media (max-width: 768px) {
-  .sidebar {
-    margin-bottom: 1rem;
-  }
 }

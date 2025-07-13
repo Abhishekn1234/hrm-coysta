@@ -7,16 +7,18 @@
     },
     "devDependencies": {
         "@popperjs/core": "^2.11.6",
-        "@tailwindcss/vite": "^4.0.0",
+        "@tailwindcss/vite": "^4.1.11",
         "@vitejs/plugin-react": "^4.2.0",
+        "autoprefixer": "^10.4.21",
         "axios": "^1.10.0",
         "bootstrap": "^5.2.3",
         "concurrently": "^9.0.1",
         "laravel-vite-plugin": "^1.2.0",
+        "postcss": "^8.5.6",
         "react": "^18.2.0",
         "react-dom": "^18.2.0",
         "sass": "^1.56.1",
-        "tailwindcss": "^4.0.0",
+        "tailwindcss": "^4.1.11",
         "vite": "^6.2.4"
     },
     "dependencies": {
@@ -42,6 +44,7 @@
         "jspdf": "^3.0.1",
         "jspdf-autotable": "^5.0.2",
         "laravel-echo": "^2.1.6",
+        "lucide-react": "^0.525.0",
         "pdf-lib": "^1.17.1",
         "pdfjs-dist": "^2.16.105",
         "popper.js": "^1.16.1",

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Card, Col, Row, Form, Button } from "react-bootstrap";
-import { FaUsers, FaCubes, FaTools } from "react-icons/fa";
+import { Card, Col, Row } from "react-bootstrap";
+import { Users, PackageCheck, CheckCircle2 } from "lucide-react"; // Lucide icons
 import axios from "axios";
 
 export default function VendorCards() {
@@ -27,60 +27,79 @@ export default function VendorCards() {
     {
       title: "Total Vendors",
       value: counts.total,
-      icon: <FaUsers size={24} color="blue" />,
+      icon: <Users size={22} color="#3b82f6" />,
+      bg: "#eff6ff", // blue-100
     },
     {
       title: "Material",
       value: counts.material,
-      icon: <FaCubes size={24} color="blue" />,
+      icon: <PackageCheck size={22} color="#10b981" />,
+      bg: "#ecfdf5", // green-100
     },
     {
       title: "Service",
       value: counts.service,
-      icon: <FaTools size={24} color="blue" />,
+      icon: <CheckCircle2 size={22} color="#a855f7" />,
+      bg: "#f5f3ff", // purple-100
     },
   ];
 
   return (
-    <>
-      {/* Count Cards */}
-      <div style={{ paddingRight: "3rem" }}>
-        <Row className="g-4 mb-4 justify-content-start">
-          {cards.map((card, index) => (
-            <Col md={3} key={index}>
-              <Card
-                style={{
-                  borderRadius: "14px",
-                  boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
-                  padding: "1.2rem",
-                  height: "100%",
-                }}
-              >
-                <div className="d-flex align-items-center">
-                  <div
+    <div className="mb-4">
+      <Row className="g-4">
+        {cards.map((card, index) => (
+          <Col md={3} key={index}>
+            <Card
+              style={{
+                borderRadius: "16px",
+                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.05)",
+                padding: "20px",
+                border: "none",
+              }}
+            >
+              <div className="d-flex align-items-center">
+                <div
+                  style={{
+                    backgroundColor: card.bg,
+                    borderRadius: "50%",
+                    padding: "12px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    marginRight: "16px",
+                    width: "42px",
+                    height: "42px",
+                  }}
+                >
+                  {card.icon}
+                </div>
+                <div>
+                  <h5
                     style={{
-                      backgroundColor: "#f1f1f1",
-                      borderRadius: "50%",
-                      padding: "10px",
-                      marginRight: "1rem",
+                      margin: 0,
+                      fontWeight: 700,
+                      color: "#0f172a",
+                      fontSize: "1.1rem",
                     }}
                   >
-                    {card.icon}
-                  </div>
-                  <div>
-                    <h6 style={{ margin: 0, fontWeight: 600, fontSize: "0.95rem" }}>
-                      {card.title}
-                    </h6>
-                    <h5 style={{ margin: 0 }}>{card.value}</h5>
+                    {card.value}
+                  </h5>
+                  <div
+                    style={{
+                      margin: 0,
+                      color: "#475569",
+                      fontSize: "14px",
+                      fontWeight: 500,
+                    }}
+                  >
+                    {card.title}
                   </div>
                 </div>
-              </Card>
-            </Col>
-          ))}
-        </Row>
-      </div>
-
-     
-    </>
+              </div>
+            </Card>
+          </Col>
+        ))}
+      </Row>
+    </div>
   );
 }
