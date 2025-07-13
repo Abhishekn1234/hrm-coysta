@@ -1417,7 +1417,7 @@ const handleContactChanges = (index, field, value) => {
       <Modal.Header closeButton style={{ backgroundColor: '#f8f9fa' }}>
         <Modal.Title className="fw-semibold">Add New Vendor</Modal.Title>
       </Modal.Header>
-    
+    <br/><br/>
       {/* Login & Org Selection Section */}
       <div style={{ backgroundColor: '#f8f9fa', // Bootstrap light
     borderRadius: '8px',
