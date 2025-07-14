@@ -302,7 +302,7 @@ public function getEmployees(Request $request)
         $year = $monthDate->year;
         $monthNum = $monthDate->month;
 
-        // Calculate total working days (excluding Sundays)
+        // Total working days in the month (excluding Sundays)
         $totalWorkingDays = collect(range(1, $monthDate->daysInMonth))->filter(function ($day) use ($monthDate) {
             $date = Carbon::create($monthDate->year, $monthDate->month, $day);
             return !$date->isSunday();
@@ -322,15 +322,25 @@ public function getEmployees(Request $request)
                 ->get();
 
             $totalDaysTaken = 0;
+            $leaveTypeCounts = [];
 
             foreach ($leaves as $leave) {
                 $start = Carbon::parse($leave->from_date);
                 $end = Carbon::parse($leave->to_date);
+
                 $days = $start->diffInDaysFiltered(function (Carbon $date) {
                     return !$date->isSunday();
                 }, $end->copy()->addDay());
 
                 $totalDaysTaken += $days;
+
+                $type = $leave->leave_type ?? 'Unknown';
+
+                if (!isset($leaveTypeCounts[$type])) {
+                    $leaveTypeCounts[$type] = 0;
+                }
+
+                $leaveTypeCounts[$type] += $days;
             }
 
             $results[] = [
@@ -346,10 +356,10 @@ public function getEmployees(Request $request)
                 'leave_days' => $totalDaysTaken,
                 'leaves_taken' => $totalDaysTaken,
                 'total_leaves' => $totalWorkingDays,
+                'leave_type_counts' => $leaveTypeCounts, // 👈 Added
                 'base_salary' => $emp->base_salary,
                 'email' => $emp->email,
                 'phone' => $emp->phone,
-                // other fields as needed...
             ];
         }
 
@@ -357,7 +367,6 @@ public function getEmployees(Request $request)
             'status' => 'success',
             'data' => $results
         ]);
-
     } catch (\Exception $e) {
         return response()->json([
             'status' => 'error',
@@ -366,6 +375,7 @@ public function getEmployees(Request $request)
         ], 500);
     }
 }
+
 
 
 

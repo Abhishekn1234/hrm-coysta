@@ -25,7 +25,7 @@ import html2pdf from "html2pdf.js";
 import "./Table.css";
 import jsPDF from 'jspdf';
 import EmployeeBenefits from "./EmployeeBenefits";
-
+import { Umbrella } from 'lucide-react'; // or any similar icon
 const Tables = forwardRef((props, ref) => {
   const slipRef = useRef();
   const [showBenefitsModal, setShowBenefitsModal] = useState(false);
@@ -1026,75 +1026,76 @@ useImperativeHandle(ref, () => ({
                     </Badge>
                   </td>
 
-                <td>
-                  <div className="d-flex align-items-center" style={{ minWidth: "100px" }}>
-                    <ButtonGroup
-                      className="w-100 justify-content-between"
-                      style={{
-                        border: "1px solid #ced4da",
-                        borderRadius: "4px",
-                        padding: "2px 4px",
-                        display: "flex",
-                        alignItems: "center",
-                        fontSize: "10px",
-                      }}
-                    >
-                      {/* Clock + Daily Hours */}
-                      <div className="d-flex align-items-center" style={{ gap: "2px" }}>
-                        <FaClock className="text-muted" size={10} />
-                        <span>{emp.daily_hours || "0h/d"}</span>
-                      </div>
+                  <td>
+                    <div className="d-flex align-items-center" style={{ minWidth: "100px" }}>
+                      <ButtonGroup
+                       
+                        style={{
+                              border: "1px solid #dee2e6",        // light grey border
+                              padding: "2px",
+                              display: "flex",
+                              alignItems: "center",
+                              fontSize: "10px",
+                              color: "#495057",                   // soft dark grey text
+                              backgroundColor: "#f8f9fa"          // Bootstrap light grey background
+                            }}
 
-                      {/* Separator */}
-                      <div className="text-muted" style={{ padding: "0 4px" }}>|</div>
+                      >
+                        {/* Clock + Daily Hours */}
+                        <div className="d-flex align-items-center" style={{ gap: "4px" }}>
+                          <FaClock size={12} color="#6c757d" />
+                          <span>{emp.daily_hours || "0h/d"}</span>
+                        </div>
 
-                      {/* Calendar + Monthly Days */}
-                      <div className="d-flex align-items-center" style={{ gap: "2px" }}>
-                        <FaCalendarAlt className="text-muted" size={10} />
-                        <span>
+                        {/* Separator */}
+                        <div style={{ padding: "0 6px", color: "#ccc" }}>|</div>
+
+                        {/* Calendar + Monthly Hours */}
+                        <div className="d-flex align-items-center" style={{ gap: "4px" }}>
+                          <FaCalendarAlt size={12} color="#6c757d" />
+                          <span>
                             {(emp.working_days ? `${emp.working_days}d/m` :
                               emp.leave_days ? `${emp.leave_days}d/m` : "0d/m")}
                           </span>
+                        </div>
 
-                      </div>
+                        {/* Separator */}
+                        <div style={{ padding: "0 6px", color: "#ccc" }}>|</div>
 
-                      {/* Separator */}
-                      <div className="text-muted" style={{ padding: "0 4px" }}>|</div>
+                        {/* Attendance Dropdown */}
+                        <Dropdown as={ButtonGroup}>
+                          <Dropdown.Toggle
+                            variant="light"
+                            size="sm"
+                            style={{
+                              padding: "0 8px",
+                              fontWeight: "500",
+                              fontSize: "11px",
+                              lineHeight: "1",
+                              border: "none",
+                              backgroundColor: "transparent",
+                              color: "#000"
+                            }}
+                          >
+                            {(emp.attendance || "").charAt(0).toUpperCase() || "P"}
+                          </Dropdown.Toggle>
 
-                      {/* Dropdown P/A/L */}
-                      <Dropdown as={ButtonGroup}>
-                        <Dropdown.Toggle
-                          variant="light"
-                          size="sm"
-                          style={{
-                            padding: "0px 6px",
-                            fontWeight: "bold",
-                            fontSize: "10px",
-                            lineHeight: "1",
-                            
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                          }}
-                        >
-                          {(emp.attendance || "").charAt(0).toUpperCase() || "P"}
-                        </Dropdown.Toggle>
+                          <Dropdown.Menu>
+                            <Dropdown.Item onClick={() => handleStatusChange(emp.id, 'present')}>
+                              <FaUserCheck className="me-2 text-success" /> Present
+                            </Dropdown.Item>
+                            <Dropdown.Item onClick={() => handleStatusChange(emp.id, 'absent')}>
+                              <FaUserTimes className="me-2 text-danger" /> Absent
+                            </Dropdown.Item>
+                            <Dropdown.Item onClick={() => handleStatusChange(emp.id, 'late')}>
+                              <FaUserClock className="me-2 text-warning" /> Late
+                            </Dropdown.Item>
+                          </Dropdown.Menu>
+                        </Dropdown>
+                      </ButtonGroup>
+                    </div>
+                  </td>
 
-                        <Dropdown.Menu>
-                          <Dropdown.Item onClick={() => handleStatusChange(emp.id, 'present')}>
-                            <FaUserCheck className="me-2 text-success" /> Present
-                          </Dropdown.Item>
-                          <Dropdown.Item onClick={() => handleStatusChange(emp.id, 'absent')}>
-                            <FaUserTimes className="me-2 text-danger" /> Absent
-                          </Dropdown.Item>
-                          <Dropdown.Item onClick={() => handleStatusChange(emp.id, 'late')}>
-                            <FaUserClock className="me-2 text-warning" /> Late
-                          </Dropdown.Item>
-                        </Dropdown.Menu>
-                      </Dropdown>
-                    </ButtonGroup>
-                  </div>
-                </td>
 
 
                   <td
@@ -1104,18 +1105,84 @@ useImperativeHandle(ref, () => ({
                     ₹{emp.base_salary?.toLocaleString() || "0"}
                   </td>
 
-                  <td
-                    style={{ cursor: "pointer" }}
-                    onClick={() =>
-                      setState(prev => ({
-                        ...prev,
-                        selectedEmployee: emp,
-                        showLeaveModal: true
-                      }))
-                    }
-                  >
-                    {emp.leaves_taken || 0}/{emp.total_leaves || 0}
-                  </td>
+               <td style={{ cursor: 'pointer' }}>
+  <Dropdown>
+    <Dropdown.Toggle
+      variant="light"
+      id={`dropdown-${emp.id}`}
+      style={{
+        color: '#00A0B5',
+        border: '1px solid #00A0B5',
+        borderRadius: '5px',
+        width: "60px",
+        padding: '4px 12px',
+        backgroundColor: 'white',
+        fontWeight: '500',
+        fontSize: '10px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '5px'
+      }}
+    >
+      {emp.leave_type_counts?.['Annual Leave']||0 }/{emp.leave_type_counts?.['Sick Leave']||0}
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="10"
+        height="10"
+        fill="#00A0B5"
+        viewBox="0 0 16 16"
+      >
+        <path d="M1.5 5.5l6 6 6-6" />
+      </svg>
+    </Dropdown.Toggle>
+
+    <Dropdown.Menu style={{ minWidth: '200px', padding: '10px' }}>
+      <div
+        style={{
+          fontWeight: '600',
+          color: '#6c757d',
+          fontSize: '13px',
+          padding: '5px 12px'
+        }}
+      >
+        Leave Balance
+      </div>
+
+      <Dropdown.ItemText style={{ fontSize: '14px', paddingLeft: '12px' }}>
+        Casual: {emp.leave_type_counts?.['Annual Leave'] || 0}
+      </Dropdown.ItemText>
+      <Dropdown.ItemText style={{ fontSize: '14px', paddingLeft: '12px' }}>
+        Sick: {emp.leave_type_counts?.['Sick Leave'] || 0}
+      </Dropdown.ItemText>
+
+      <Dropdown.Divider />
+
+      <Dropdown.Item
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          fontSize: '14px',
+          paddingLeft: '12px'
+        }}
+        onClick={() =>
+          setState((prev) => ({
+            ...prev,
+            selectedEmployee: emp,
+            showLeaveModal: true
+          }))
+        }
+      >
+        <Umbrella size={16} />
+        New Request
+      </Dropdown.Item>
+    </Dropdown.Menu>
+  </Dropdown>
+</td>
+
+
+
+
 
                   <td>
                     <div className="d-flex justify-content-center gap-1 flex-wrap">

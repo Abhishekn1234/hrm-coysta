@@ -10,7 +10,13 @@ import AddDepartmentForm from "./AddDepartmentForm";
 import ManageLeaves from "./ManageLeaves";
 import ProcessPayroll from "./ProcessPayroll";
 import Tables from "./Tables";
-
+import {
+  UserPlus, // Lucide-react icons or Bootstrap Icons
+  Network,
+  Umbrella,
+  Wallet,
+  FileDown
+} from 'lucide-react'; 
 
 export default function AddEmployee() {
   const [showModal, setShowModal] = useState(false);
@@ -94,39 +100,39 @@ export default function AddEmployee() {
 
   return (
     <>
-      <Container fluid className="mt-3 p-0 bg-light">
-        <div 
-          className="d-flex justify-content-start gap-3 p-2 flex-nowrap"
+    <Container fluid className="mt-3 p-0 bg-light">
+    <div
+      className="d-flex justify-content-start gap-3 p-2 flex-nowrap"
+      style={{
+        overflowX: 'auto',
+        scrollbarWidth: 'none', // Firefox
+        msOverflowStyle: 'none' // IE/Edge
+      }}
+    >
+      {options.map((item) => (
+        <Card
+          key={item.id}
+          onClick={() => handleCardClick(item.id)}
+          className="d-flex justify-content-center align-items-center rounded shadow-sm cursor-pointer"
           style={{
-            overflowX: "auto",
-            scrollbarWidth: "none",
-            msOverflowStyle: "none",
-            
+            width: '235px',
+            height: '80px',
+            flexShrink: 0,
+            backgroundColor: '#fff',
+            transition: 'all 0.3s ease',
+            border: '1px solid #e5e9f2'
           }}
+          role="button"
+          tabIndex="0"
         >
-          {options.map((item) => (
-            <Card
-              key={item.id}
-              onClick={() => handleCardClick(item.id)}
-              className="d-flex justify-content-center align-items-center rounded shadow-sm cursor-pointer"
-              style={{
-                width: "235px",
-                height: "80px",
-                flexShrink: 0,
-                transition: 'all 0.3s ease',
-              }}
-              aria-label={`Open ${item.title} form`}
-              role="button"
-              tabIndex="0"
-            >
-              <div className="text-center">
-                <div className="mb-2" style={{color:"#3b5998"}}>{item.icon}</div>
-                <div className="fw-bold text-dark">{item.title}</div>
-              </div>
-            </Card>
-          ))}
-        </div>
-      </Container>
+          <div className="text-center">
+            <div className="mb-1" style={{ color: '#3b5998' }}>{item.icon}</div>
+            <div className="fw-bold text-dark" style={{ fontSize: '14px' }}>{item.title}</div>
+          </div>
+        </Card>
+      ))}
+    </div>
+  </Container>
 
   {selectedId !== 5 && (
   <Modal show={showModal} onHide={handleClose} centered size="lg">

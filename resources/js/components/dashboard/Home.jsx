@@ -64,76 +64,88 @@ const cardData = stats
     <>
       <HRDashboardHeader />
       <div style={{ padding: "15px" }}>
-        <Container fluid style={{ maxWidth: "100%", padding: "0 15px" }}>
-         <Row className="g-3">
-  {cardData.map((item) => (
-    <Col 
-      key={item.id}
-      xs={12} sm={6} md={3} lg={3}
-      style={{ minWidth: "230px", overflow: "hidden" }}
-    >
-      <Card
-        style={{
-          height: "150px",
-          width: "270px",
-          borderRadius: "10px",
-          overflow: "hidden",
-          boxShadow: "0 0.125rem 0.25rem rgba(0, 0, 0, 0.075)",
-          border: "1px solid #e5e9f2",
-          display: "flex",
-          flexDirection: "column",
-          margin: "0 auto",
-          maxWidth: "100%",
-        }}
-      >
-        {/* Title Section */}
-        <div style={{ backgroundColor: item.titleBgColor, padding: "12px 16px", borderBottom: "1px solid #e5e9f2" }}>
-          <Card.Title style={{
-            fontSize: "14px",
-            marginBottom: "0",
-            fontWeight: "600",
-            color: "#6e84a3",
-            textTransform: "uppercase",
-            letterSpacing: "0.5px"
-          }}>
-            {item.title}
-          </Card.Title>
-        </div>
+    <Container fluid style={{ padding: "0 15px" }}>
+      <Row className="g-3">
+        {cardData.map((item) => (
+          <Col
+            key={item.id}
+            xs={12}
+            sm={6}
+            md={3}
+            lg={3}
+            style={{ minWidth: "230px", overflow: "hidden" }}
+          >
+            <Card
+              style={{
+                height: "150px",
+                width: "270px",
+                borderRadius: "12px",
+                overflow: "hidden",
+                boxShadow: "0 4px 8px rgba(0, 0, 0, 0.03)",
+                border: "1px solid #e3e6ef",
+                display: "flex",
+                flexDirection: "column",
+                margin: "0 auto"
+              }}
+            >
+              {/* Title Section */}
+              <div
+                style={{
+                  backgroundColor: "#fff",
+                  padding: "12px 16px",
+                  borderBottom: "1px solid #f0f0f0"
+                }}
+              >
+                <Card.Title
+                  style={{
+                    fontSize: "14px",
+                    marginBottom: "0",
+                    fontWeight: "600",
+                    color: "#2f3c4e"
+                  }}
+                >
+                  {item.title}
+                </Card.Title>
+              </div>
 
-        {/* Main content section */}
-        <div style={{
-          backgroundColor: item.bgColor,
-          padding: "16px",
-          flex: "1",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "space-between"
-        }}>
-          <div style={{
-            fontSize: "28px",
-            fontWeight: "700",
-            color: item.countColor,
-            margin: "8px 0"
-          }}>
-            {item.count}
-          </div>
+              {/* Body Section */}
+              <div
+                style={{
+                  backgroundColor: "#f7f9fc",
+                  padding: "16px",
+                  flex: "1",
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "space-between"
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: "28px",
+                    fontWeight: "700",
+                    color: item.countColor,
+                    marginBottom: "8px"
+                  }}
+                >
+                  {item.count}
+                </div>
 
-          <div style={{
-            fontSize: "12px",
-            color: "#95aac9",
-            fontWeight: "500",
-            marginTop: "auto"
-          }}>
-            {item.growth}
-          </div>
-        </div>
-      </Card>
-    </Col>
-  ))}
-</Row>
-
-        </Container>
-      </div>
+                <div
+                  style={{
+                    fontSize: "12px",
+                    color: "#95aac9",
+                    fontWeight: "500"
+                  }}
+                >
+                  {item.growth}
+                </div>
+              </div>
+            </Card>
+          </Col>
+        ))}
+      </Row>
+    </Container>
+  </div>
       <AddEmployee />
       <Row className="g-0">
         <Col lg={3}>
