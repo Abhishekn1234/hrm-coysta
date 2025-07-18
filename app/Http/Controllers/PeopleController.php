@@ -3,6 +3,7 @@
 
 
 namespace App\Http\Controllers;
+use App\Models\Customer;
 
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -19,6 +20,56 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 class PeopleController extends Controller
 {
+    public function assignTask(Request $request, $id)
+{
+    $request->validate([
+        'task_name' => 'required|string|max:255',
+        'task_description' => 'nullable|string',
+        'deadline' => 'required|date',
+        'project_name' => 'nullable|string|max:255',
+        'customer' => 'nullable|string|max:255',
+        'project_value' => 'nullable|numeric',
+        'project_status' => 'nullable|in:In Progress,Completed,Pending',
+    ]);
+
+    $user = Customer::findOrFail($id);
+
+    $task = $user->tasks()->create([
+        'task_name' => $request->task_name,
+        'task_description' => $request->task_description,
+        'deadline' => $request->deadline,
+        'assigned_by' => auth()->id() ?? null,
+        'project_name' => $request->project_name,
+        'customer' => $request->customer,
+        'project_value' => $request->project_value,
+        'project_status' => $request->project_status,
+    ]);
+
+    return response()->json([
+        'message' => 'Task with project assigned successfully',
+        'task' => $task,
+    ]);
+}
+// ✅ GET: Show all tasks assigned to a specific customer
+public function customerTasks($id)
+{
+    $customer = Customer::with('tasks')->findOrFail($id);
+
+    return response()->json([
+        'customer' => $customer->display_name,
+        'tasks' => $customer->tasks
+    ]);
+}
+public function UserTasks($id)
+{
+    $customer = User::with('tasks')->findOrFail($id);
+
+    return response()->json([
+        'customer' => $customer->display_name,
+        'tasks' => $customer->tasks
+    ]);
+}
+
     public function getCounts()
     {
         $total = User::where('user_type', 'STAFF')->count();
@@ -281,6 +332,63 @@ public function destroy($id)
 
     return response()->json(['message' => 'Staff deleted successfully']);
 }
+
+
+public function assignTaskToCustomer(Request $request, $customerId)
+{
+    $request->validate([
+        'user_id' => 'required|exists:users,id',
+        'task_name' => 'required|string|max:255',
+        'task_description' => 'nullable|string',
+        'deadline' => 'required|date',
+        'project_value' => 'nullable|numeric',
+        'project_status' => 'nullable|in:In Progress,Completed,Pending',
+    ]);
+
+    $customer = User::findOrFail($customerId);
+
+    $now = Carbon::now();
+    $deadline = Carbon::parse($request->deadline);
+
+    // ✅ Calculate time difference
+    $diff = $now->diff($deadline);
+
+    // ✅ Build duration string like "6 days 3 hours 15 minutes"
+    $parts = [];
+    if ($diff->d > 0) {
+        $parts[] = $diff->d . ' day' . ($diff->d > 1 ? 's' : '');
+    }
+    if ($diff->h > 0) {
+        $parts[] = $diff->h . ' hour' . ($diff->h > 1 ? 's' : '');
+    }
+    if ($diff->i > 0) {
+        $parts[] = $diff->i . ' minute' . ($diff->i > 1 ? 's' : '');
+    }
+    if (empty($parts)) {
+        $parts[] = 'less than 1 minute';
+    }
+
+    $detailedDuration = implode(' ', $parts);
+
+    // ✅ Store task
+    $task = $customer->tasks()->create([
+        'user_id' => $request->user_id,
+        'task_name' => $request->task_name,
+        'task_description' => $request->task_description,
+        'deadline' => $request->deadline,
+        'assigned_by' => auth()->id() ?? null,
+        'project_name' => $request->project_name,
+        'project_value' => $request->project_value,
+        'project_status' => $request->project_status,
+        'duration' => $detailedDuration, // Store readable string
+    ]);
+
+    return response()->json([
+        'message' => 'Task assigned to customer successfully',
+        'task' => $task,
+        'duration_detailed' => $detailedDuration
+    ]);
+}
 protected function storeFile(Request $request, $field)
 {
     if ($request->hasFile($field)) {
@@ -288,6 +396,7 @@ protected function storeFile(Request $request, $field)
     }
     return null;
 }
+
 
 
 

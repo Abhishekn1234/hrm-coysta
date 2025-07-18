@@ -5,9 +5,44 @@ use Illuminate\Support\Facades\Log;
 
 use App\Models\Customer;
 use Illuminate\Http\Request;
-
+use App\Models\Invoice;
+use Illuminate\Support\Str;
 class CustomerController extends Controller
 {
+    public function storeInvoice(Request $request, $customerId)
+{
+    $validated = $request->validate([
+        'issue_date' => 'required|date',
+        'due_date' => 'required|date|after_or_equal:issue_date',
+        'amount' => 'required|numeric|min:0',
+        'status' => 'required|string'
+    ]);
+
+    $invoice = Invoice::create([
+        'customer_id' => $customerId,
+        'invoice_id' => 'INV-' . strtoupper(Str::random(6)),
+        'issue_date' => $validated['issue_date'],
+        'due_date' => $validated['due_date'],
+        'amount' => $validated['amount'],
+        'status' => $validated['status'],
+    ]);
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Invoice created successfully',
+        'data' => $invoice
+    ], 201);
+}
+
+public function getInvoices($customerId)
+{
+    $invoices = Invoice::where('customer_id', $customerId)->get();
+
+    return response()->json([
+        'success' => true,
+        'data' => $invoices
+    ]);
+}
     // ✅ GET: List all customers
     public function index()
     {

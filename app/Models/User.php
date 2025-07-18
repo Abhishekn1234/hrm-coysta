@@ -92,7 +92,10 @@ public function leaveRequests()
     // Additional
     'esi_card_no', 'pf_no'
 ];
-
+public function tasks()
+{
+    return $this->hasMany(Task::class, 'user_id');
+}
 
 
     /**

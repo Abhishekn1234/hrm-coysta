@@ -32,7 +32,10 @@ class LeaveRequestController extends Controller
         'leave' => $leave
     ]);
 }
-
+public function index(){
+     $leaves = LeaveRequest::with(['employee'])->get();
+        return response()->json($leaves);
+}
 
     // Get all leaves (admin)
    public function getEnums()
@@ -65,6 +68,15 @@ class LeaveRequestController extends Controller
         $leave = LeaveRequest::with('employee')->findOrFail($id);
         return response()->json($leave);
     }
+public function getLeavesByUser($userId)
+{
+    $leaves = LeaveRequest::where('employee_id', $userId)->orderByDesc('from_date')->get();
+
+    return response()->json([
+        'employee_id' => $userId,
+        'leaves' => $leaves
+    ]);
+}
 
     // Update leave (e.g., status)
     public function update(Request $request, $id)

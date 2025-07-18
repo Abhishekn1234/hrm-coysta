@@ -22,6 +22,7 @@ use  App\Http\Controllers\Admin\PayrollController;
  */
 // use App\Http\Controllers\Admin\HrmController;
 use App\Http\Controllers\Admin\DepartmentController;
+use App\Http\Controllers\Admin\ProjectController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\LeaveRequestController;
 use App\Http\Controllers\UserAttendanceController;
@@ -29,11 +30,36 @@ use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\PeopleController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\VendorController;
+Route::prefix('projects')->group(function () {
+    Route::get('/', [ProjectController::class, 'index']); // All projects
+    Route::post('/', [ProjectController::class, 'store']); // Add project
+    Route::get('/{id}', [ProjectController::class, 'show']); // Get project by ID
+    Route::put('/{id}', [ProjectController::class, 'update']); // Update project
+    Route::delete('/{id}', [ProjectController::class, 'destroy']); // Delete project
+
+   
+    Route::get('/customer/{customer_id}', [ProjectController::class, 'getByCustomer']);
+});
+Route::post('/v1/customers/{customer}/invoices', [CustomerController::class, 'storeInvoice']);
+Route::get('/v1/customers/{customer}/invoices', [CustomerController::class, 'getInvoices']);
 
 Route::prefix('v1')->group(function () {
-    Route::put('/users/{id}/attendance', [AttendanceController::class, 'store']);
-    Route::get('/user/{id}/attendance-monthly-summary', [AttendanceController::class, 'monthlySummary']);
+
+    // Attendance (Mark, View, Monthly)
+    Route::post('/users/{id}/attendance', [UserAttendanceController::class, 'update']); // Mark
+    Route::get('/users/{id}/attendance', [UserAttendanceController::class, 'show']);    // View
+    Route::get('/users/{id}/attendance-monthly-summary', [AttendanceController::class, 'monthlySummary']);
+
+    // Leave
+    Route::post('/users/{id}/leave-request', [LeaveController::class, 'store']);
+
+    // Payslip
+    // Using PeopleController
+Route::get('/users/{id}/payslip', [PeopleController::class, 'showPayslip']);
+Route::post('/users/{id}/assign-task', [PeopleController::class, 'assignTask']);
+
 });
+
 Route::prefix('customer')->group(function () {
     Route::get('/customers', [CustomerController::class, 'index']);
     Route::get('/customer/count', [CustomerController::class, 'count']);
@@ -41,6 +67,8 @@ Route::prefix('customer')->group(function () {
     Route::get('/customer-count-business', [CustomerController::class, 'countBusinessCustomers']);
     Route::get('/customer-count-individual', [CustomerController::class, 'countIndividualCustomers']);
     Route::get('/customer-count-per-month', [CustomerController::class, 'countPerMonth']);
+Route::get('/customers/{id}/tasks', [PeopleController::class, 'UserTasks']);
+Route::post('/customers/{id}/assign-task', [PeopleController::class, 'assignTaskToCustomer']);
 
    
     Route::get('/customer/{id}', [CustomerController::class, 'show']);
@@ -61,7 +89,9 @@ Route::prefix('v1')->group(function () {
 Route::prefix('benefits')->group(function () {
     Route::get('/{userId}', [HrmController::class, 'getBenefit']);  
      Route::get('/', [HrmController::class, 'getBenefits']);  
-        
+    Route::put('/benefits-bulk-update', [HrmController::class, 'bulkUpdateBenefits']);
+   Route::get('/benefits-export-pdf', [HrmController::class, 'exportBenefitsToPDF']);
+
     Route::post('/', [HrmController::class, 'addBenefit']);              // POST
     Route::put('/{userId}', [HrmController::class, 'editBenefit']);      // PUT
     Route::delete('/{userId}', [HrmController::class, 'deleteBenefit']); // DELETE
@@ -78,6 +108,11 @@ Route::prefix('staff')->group(function () {
     Route::delete('/{id}', [PeopleController::class, 'destroy']);
 });
 
+Route::prefix('attendance')->group(function () {
+    Route::get('/user/{id}/daily-logs', [UserAttendanceController::class, 'getDailyLogs']);
+    Route::get('/user/{id}/summary', [UserAttendanceController::class, 'getAttendanceSummary']);
+    Route::get('/all/daily', [UserAttendanceController::class, 'getAllUsersDailyAttendance']);
+});
 
 Route::post('/users/{id}/attendance', [UserAttendanceController::class, 'update']);
  Route::get('/users/{id}/attendance-monthly-summary', [AttendanceController::class, 'monthlySummary']);
@@ -96,6 +131,8 @@ Route::prefix('leave')->group(function () {
     Route::post('/apply', [LeaveRequestController::class, 'apply']);
     Route::get('/', [LeaveRequestController::class, 'index']);
     Route::get('/{id}', [LeaveRequestController::class, 'show']);
+    Route::get('/leave/user/{userId}', [LeaveRequestController::class, 'getLeavesByUser']);
+
     Route::patch('/{id}', [LeaveRequestController::class, 'update']);
     Route::delete('/{id}', [LeaveRequestController::class, 'destroy']);
 });

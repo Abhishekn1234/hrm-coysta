@@ -12,7 +12,7 @@ use App\Models\EmploymentHistory;
 use App\Models\EmployeeDocument;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Benefit;
-
+ use Barryvdh\DomPDF\Facade\Pdf;
 class HrmController extends Controller
 {
     // 1️⃣ Create a new employee with optional files
@@ -709,4 +709,28 @@ public function getBenefit($userId)
         $benefit->delete();
         return response()->json(['message' => 'Benefit deleted successfully']);
     }
+   
+
+public function exportBenefitsToPDF()
+{
+    $benefits = Benefit::all(); // Or your logic to get benefits with users
+
+    $pdf = Pdf::loadView('pdf.benefits', compact('benefits'));
+
+    return $pdf->download('benefits-summary.pdf');
+}
+public function bulkUpdateBenefits(Request $request)
+{
+    $updates = $request->input('benefits'); // Expected to be an array of benefit updates
+
+    foreach ($updates as $item) {
+        Benefit::where('id', $item['id'])->update([
+            'value' => $item['value'],
+            'remarks' => $item['remarks'] ?? null
+        ]);
+    }
+
+    return response()->json(['message' => 'All benefits updated successfully.']);
+}
+
 }

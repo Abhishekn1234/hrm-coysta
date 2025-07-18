@@ -22,6 +22,7 @@ import { FiCalendar, FiAlertTriangle, FiCheckCircle } from "react-icons/fi";
 import { toast } from "react-toastify";
 import axios from "axios";
 import html2pdf from "html2pdf.js";
+import AddEmployee from "./AddEmployee";
 import "./Table.css";
 import jsPDF from 'jspdf';
 import EmployeeBenefits from "./EmployeeBenefits";
@@ -359,7 +360,7 @@ const formatDate = (dateString) => {
     payrollMonth: new Date(),
     attendance:""
   });
-
+const [selectedId, setSelectedId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 25;
   const [searchTerm, setSearchTerm] = useState("");
@@ -727,6 +728,10 @@ const handleExperienceChange = (index, field, value) => {
       toast.error("Something went wrong.");
     }
   };
+const handleCardClick = (id) => {
+  setSelectedId(id);
+  setShowModal(true);
+};
 
   const fetchPayrollDetails = async (employee) => {
     try {
@@ -995,19 +1000,23 @@ useImperativeHandle(ref, () => ({
               paginatedData.map(emp => (
                 <tr key={emp.id} style={{ height: "38px" }}>
                   <td style={{ textAlign: "center" }}>
-                    <input
-                      type="checkbox"
-                      checked={state.selected.includes(emp.id)}
-                      onChange={(e) => {
-                        setState(prev => ({
-                          ...prev,
-                          selected: e.target.checked
-                            ? [...prev.selected, emp.id]
-                            : prev.selected.filter(id => id !== emp.id)
-                        }));
-                      }}
-                    />
-                  </td>
+  <input
+    type="checkbox"
+    checked={state.selected.includes(emp.id)}
+    onChange={(e) => {
+      setState(prev => ({
+        ...prev,
+        selected: e.target.checked
+          ? [...prev.selected, emp.id]
+          : prev.selected.filter(id => id !== emp.id)
+      }));
+    }}
+  />
+  
+  {/* Only show AddEmployee for this employee if selected */}
+  
+</td>
+
 
                   <td style={{ fontWeight: "500", wordBreak: "break-word" }}>
                     {emp.emp_code} {emp.first_name} {emp.last_name}
@@ -2484,6 +2493,7 @@ useImperativeHandle(ref, () => ({
           </Button>
         </Modal.Footer>
       </Modal>
+      <AddEmployee selected={state.selected} />
 
     </div>
   );

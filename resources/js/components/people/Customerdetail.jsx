@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import NewProjectModal from './NewProjectModal';
+import InvoiceModal from './InvoiceModal';
 import {
   Container,
   Row,
@@ -91,7 +93,7 @@ export default function Customerdetail() {
  const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-
+  const [showNewProject, setShowNewProject] = useState(false);
   // State setup
   const [customer, setCustomer] = useState({});
   const [gstDetails, setGstDetails] = useState([]);
@@ -103,16 +105,17 @@ const [password, setPassword] = useState('');
   const [contactPersons, setContactPersons] = useState([]);
   const [newAddress, setNewAddress] = useState({ address: '', city: '', state: '', pincode: '' });
   const [showForm, setShowForm] = useState(false);
+   const [showModal, setShowModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [activeKey, setActiveKey] = useState('profile');
+const quickActions = [
+  { label: 'New Project', icon: <FaPlus />, onClick: () => setShowNewProject(true) },
+  { label: 'New Invoice', icon: <FaFileInvoice />,onClick:() => setShowModal(true) },
+  { label: 'New Estimate', icon: <FaClipboardList /> },
+  { label: 'Log Payment', icon: <FaMoneyBillWave /> },
+  { label: 'Send Mail', icon: <FaEnvelope /> }
+];
 
-  const quickActions = [
-    { label: 'New Project', icon: <FaPlus /> },
-    { label: 'New Invoice', icon: <FaFileInvoice /> },
-    { label: 'New Estimate', icon: <FaClipboardList /> },
-    { label: 'Log Payment', icon: <FaMoneyBillWave /> },
-    { label: 'Send Mail', icon: <FaEnvelope /> }
-  ];
 
   // Fetch customer data
   useEffect(() => {
@@ -202,6 +205,7 @@ const [password, setPassword] = useState('');
   if (!customer) return <p>Loading...</p>;
   return (
     <div className="bg-light min-vh-100">
+      
       <Container className="py-4">
         {/* Back Button */}
         <div className="mb-3">
@@ -244,10 +248,15 @@ const [password, setPassword] = useState('');
           <h6 className="text-muted mb-3">Quick Actions</h6>
           <div className="d-flex flex-wrap gap-3">
             {quickActions.map((action, idx) => (
-              <Button key={idx} variant="light" className="border text-nowrap d-flex align-items-center gap-2">
+              <Button key={idx} variant="light" className="border text-nowrap d-flex align-items-center gap-2" onClick={action.onClick}>
                 {action.icon} {action.label}
               </Button>
             ))}
+             <NewProjectModal show={showNewProject} onHide={() => setShowNewProject(false)} customer={customer.company_name} id={id} />
+                <InvoiceModal
+              show={showModal}
+              onClose={() => setShowModal(false)}
+              customerId={id}/>
           </div>
         </div>
 
@@ -887,6 +896,7 @@ const [password, setPassword] = useState('');
             <Button variant="primary" onClick={handleUpdateCustomer}>Edit Customer</Button>
           </Modal.Footer>
         </Modal>
+        
       </Container>
     </div>
   );

@@ -1,7 +1,7 @@
 import React from "react";
 import { Button } from "react-bootstrap";
 
-export default function ProcessPayroll() {
+export default function ProcessPayroll({selectedEmployees = [],onClose}) {
   return (
     <div
       style={{
@@ -11,17 +11,10 @@ export default function ProcessPayroll() {
        
       }}
     >
-      {/* Header */}
-      <h1
-        style={{
-          fontWeight: "600",
-          marginBottom: "30px",
-          fontSize: "28px",
-          color: "#333",
-    
-        }}
-      >
-        Payroll Details - John Doe (EMP001) - May 2024
+     <h1 style={{ fontWeight: "600", marginBottom: "30px", fontSize: "28px", color: "#333" }}>
+        {selectedEmployees.length === 1
+          ? `Payroll Details - Employee (${selectedEmployees[0]})`
+          : `Processing Payroll for ${selectedEmployees.length} Employees`}
       </h1>
 
       {/* Earnings and Deductions */}
@@ -171,7 +164,7 @@ export default function ProcessPayroll() {
           paddingTop: "20px",
         }}
       >
-        <Button variant="outline-secondary" style={{ padding: "8px 20px" }}>
+        <Button variant="outline-secondary" style={{ padding: "8px 20px" }} onClick={onClose}>
           Close
         </Button>
         <Button variant="outline-primary" style={{ padding: "8px 20px" }}>

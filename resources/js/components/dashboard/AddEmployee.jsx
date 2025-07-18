@@ -18,7 +18,7 @@ import {
   FileDown
 } from 'lucide-react'; 
 
-export default function AddEmployee() {
+export default function AddEmployee({ selected }) {
   const [showModal, setShowModal] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
   const ICON_SIZE = 32;
@@ -88,15 +88,24 @@ export default function AddEmployee() {
 
 
   const renderModalContent = () => {
-    switch (selectedId) {
-      case 1: return <AddEmployeeForm onClose={handleClose} />;
-      case 2: return <AddDepartmentForm onClose={handleClose}/>;
-      case 3: return <ManageLeaves  onClose={handleClose} />;
-      case 4: return <ProcessPayroll onClose={handleClose}/>;
-      // case 5: return <ExportData />;
-      default: return null;
-    }
-  };
+  switch (selectedId) {
+    case 1:
+      return <AddEmployeeForm onClose={handleClose} />;
+    case 2:
+      return <AddDepartmentForm onClose={handleClose} />;
+    case 3:
+      return <ManageLeaves onClose={handleClose} />;
+    case 4:
+      return (
+       <ProcessPayroll
+        selectedEmployees={selected}  // ✅ pass selected employee IDs
+        onClose={handleClose}
+      />
+      );
+    default:
+      return null;
+  }
+};
 
   return (
     <>

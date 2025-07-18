@@ -1,5 +1,8 @@
 import React, { useState, useEffect,useContext } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
+import ViewPayslipModal from './ViewPayslipModal';
 import {
   Tabs,
   Tab,
@@ -14,7 +17,7 @@ import {
   AccordionContext
 } from 'react-bootstrap';
 import { toast } from 'react-toastify';
-
+import './g.css';
 import {
   FaEdit,
   FaTrash,
@@ -106,8 +109,24 @@ const [password, setPassword] = useState('');
   const [tabKey, setTabKey] = useState('general');
   const [peopleTabKey, setPeopleTabKey] = useState(null);
   const [activeKey, setActiveKey] = useState('0');
+  const [showAttendanceModal, setShowAttendanceModal] = useState(false);
+const [attendanceStatus, setAttendanceStatus] = useState('');
+const [attendanceHistory, setAttendanceHistory] = useState([]);
+const [loadingHistory, setLoadingHistory] = useState(false);
   const [staff, setStaff] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showLeaveModal, setShowLeaveModal] = useState(false);
+
+const [leaveForm, setLeaveForm] = useState({
+  employee_id: '', // filled from staff.id
+  leave_type: '',
+  from_date: '',
+  to_date: '',
+  reason: '',
+  is_emergency: false,
+  status: 'PENDING',
+});
+
   const [newAddress, setNewAddress] = useState({
     address: '',
     city: '',
@@ -119,6 +138,59 @@ const [password, setPassword] = useState('');
   const { state } = useLocation();
   const navigate = useNavigate();
 
+ const [tasks, setTasks] = useState([]);
+const [leaves, setLeaves] = useState([]);
+
+useEffect(() => {
+  if (id) {
+    axios
+      .get(`http://127.0.0.1:8000/api/v1/leave/leave/user/${id}`)
+      .then((res) => setLeaves(res.data.leaves || []))
+      .catch((err) => console.error('Failed to fetch leaves:', err));
+  }
+}, [staff]);
+const handleLeaveSubmit = async () => {
+  try {
+    const payload = {
+      ...leaveForm,
+      employee_id: staff?.id || id, // Ensure it's filled
+      is_emergency: leaveForm.is_emergency ? 1 : 0,
+      status: 'PENDING',
+    };
+
+    const res = await axios.post('http://127.0.0.1:8000/api/v1/leave/apply', payload);
+
+    toast.success("✅ Leave requested successfully");
+    setShowLeaveModal(false);
+    setLeaveForm({
+      employee_id: '',
+      leave_type: '',
+      from_date: '',
+      to_date: '',
+      reason: '',
+      is_emergency: false,
+      status: 'PENDING',
+    });
+  } catch (err) {
+    console.error(err);
+    toast.error("❌ Failed to submit leave request");
+  }
+};
+
+ useEffect(() => {
+    const fetchTasks = async () => {
+      try {
+        const res = await axios.get(`http://127.0.0.1:8000/api/v1/customer/customers/${id}/tasks`);
+        setTasks(res.data.tasks || []);
+      } catch (error) {
+        console.error("Error fetching tasks:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTasks();
+  }, [id]);
   const handleAddContact = () => {
     setContactPersons([
       ...contactPersons,
@@ -132,7 +204,7 @@ const [password, setPassword] = useState('');
       },
     ]);
   };
-
+  const userTasks = tasks.filter(task => String(task.user_id) === String(id));
   const handleAddClicks = () => {
     setShowForm(true);
   };
@@ -152,6 +224,96 @@ const [password, setPassword] = useState('');
     newGstDetails[index][field] = value;
     setGstDetails(newGstDetails);
   };
+  const [showModal, setShowModal] = useState(false);
+  const [modalAction, setModalAction] = useState('');
+  const [formData, setFormData] = useState({
+    user_id: '',
+    task_name: '',
+    task_description: '',
+    deadline: '',
+    project_value: '',
+    project_status: '',
+  });
+
+ const handleClick = (label) => {
+  setModalAction(label);
+
+  // Reset form data to default empty strings before opening the modal
+  setFormData({
+    user_id: staff?.id || '',  // auto-assign if needed
+    task_name: '',
+    task_description: '',
+    deadline: '',
+    project_value: '',
+    project_status: '',
+  });
+
+  setShowModal(true);
+};
+
+
+  const handleChanges = (e) => {
+    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+const handleSubmit = async () => {
+  try {
+    if (!id) {
+      toast.error("❌ Cannot find user ID.");
+      return;
+    }
+
+    const payload = {
+      ...formData,
+      user_id: id, // ✅ Ensure user_id is set
+    };
+
+    const response = await axios.post(
+      `http://127.0.0.1:8000/api/v1/customer/customers/${id}/assign-task`,
+      payload
+    );
+
+    toast.success("✅ Task assigned successfully");
+
+    // ✅ Reset the form fields
+    setFormData({
+      user_id: '',
+      task_name: '',
+      task_description: '',
+      deadline: '',
+      project_value: '',
+      project_status: '',
+    });
+
+    setShowModal(false);
+  } catch (error) {
+    console.error(error);
+    toast.error("❌ Failed to assign task");
+  }
+};
+
+const getStatusColor = (status) => {
+  switch (status) {
+    case "Present": return "success";
+    case "Absent": return "danger";
+    case "Late": return "warning";
+    default: return "secondary";
+  }
+};
+const handleSubmitAttendance = async () => {
+  if (!attendanceStatus) return toast.error("Please select an attendance status");
+
+  try {
+    await axios.post(`http://127.0.0.1:8000/api/v1/users/${id}/attendance`, { status: attendanceStatus.toLowerCase() });
+    toast.success("✅ Attendance marked!");
+    setShowAttendanceModal(false);
+  } catch (err) {
+    console.error(err);
+    toast.error("❌ Failed to mark attendance");
+  }
+};
+
+
 
   const generateDocuments = (staffData) => {
     const docs = [
@@ -183,6 +345,10 @@ const [password, setPassword] = useState('');
 
 
 const [selectedSkills, setSelectedSkills] = useState([]);
+const [showPayslipModal, setShowPayslipModal] = useState(false);
+
+// On icon click
+const handlePayslipView = () => setShowPayslipModal(true);
 const populateLoginFields = (staffData) => {
   setLoginEnabled(!!staffData?.isLogin);
   setOrganization(staffData?.organization || '');
@@ -212,6 +378,16 @@ const populateLoginFields = (staffData) => {
     fetchStaff();
   }
 }, [id, state]);
+const getCurrentMonthYear = () => {
+  const now = new Date();
+  return now.toLocaleString('default', { month: 'long', year: 'numeric' }); // e.g. "July 2025"
+};
+const currentMonthPayslip = staff && {
+  month: getCurrentMonthYear(),
+  gross_salary: staff.salary || 0,
+  deductions: parseFloat(staff.daily_remuneration || 0),
+  net_salary: staff.net_salary || 0,
+};
 
 
   useEffect(() => {
@@ -241,6 +417,36 @@ const handleUpdateStaff = async () => {
   if (loading) return <p>Loading...</p>;
   if (!staff) return <p className="text-danger">Staff not found</p>;
   if (!documents.length) return <div>Loading documents...</div>;
+ const handleDownloadPayslip = (slip) => {
+  console.log(`Downloading payslip for ${slip.month}`);
+
+  // Ensure `staff` object is available in this scope
+  if (!staff) {
+    console.error('Staff data not available');
+    return;
+  }
+
+  // Prepare data for XLSX
+  const data = [
+    { Field: 'Employee Name', Value: staff.name },
+    { Field: 'Month', Value: slip.month },
+    { Field: 'Amount', Value: staff.daily_renumeration || staff.gross_salary ||0 },
+    { Field: 'Department', Value: staff.department || staff.designation },
+    { Field: 'Date Generated', Value: new Date().toLocaleDateString() }
+  ];
+
+  // Convert to worksheet and workbook
+  const worksheet = XLSX.utils.json_to_sheet(data);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'Payslip');
+
+  // Create blob and download
+  const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+  const blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
+  const fileName = `Payslip_${slip.month}_${staff.name.replace(/\s+/g, '_')}.xlsx`;
+  saveAs(blob, fileName);
+};
+
 const handleDeleteStaff = async () => {
   if (!staff?.id) {
     toast.error("Invalid staff ID");
@@ -333,32 +539,34 @@ const handleDeleteStaff = async () => {
       {/* Quick Actions: Always Visible */}
       <Card className="mb-4 p-4 shadow-sm rounded-4">
   <h6 className="mb-3 text-dark fw-semibold">Quick Actions</h6>
-  <Row className="gx-3 gy-3">
-    {[
-      { icon: <FaCalendarCheck />, label: "Mark Attendance" },
-      { icon: <FaPlane />, label: "Request Leave" },
-      { icon: <FaFileInvoice />, label: "View Payslip" },
-      { icon: <FaTasks />, label: "Assign Task" },
-    ].map((action, index) => (
-      <Col key={index} xs={6} sm={4} md={3}>
-        <div
-          className="d-flex align-items-center gap-2 px-3 py-2 rounded-3 me-3"
-          style={{
-            backgroundColor: '#f8f9fa',
-            fontWeight: 500,
-            fontSize: '14px',
-            color: '#2f3542',
-            border: '1px solid #e3e6ea',
-            cursor: 'pointer',
-            transition: 'all 0.2s ease',
-          }}
-        >
-          <span style={{ fontSize: '16px' }}>{action.icon}</span>
-          <span>{action.label}</span>
-        </div>
-      </Col>
-    ))}
-  </Row>
+ <Row className="gx-3 gy-3">
+  {[
+   { icon: <FaCalendarCheck />, label: "Mark Attendance", onClick: () => setShowAttendanceModal(true) },
+    { icon: <FaPlane />, label: "Request Leave" ,onClick: () => setShowLeaveModal(true)},
+    { icon: <FaFileInvoice />, label: "View Payslip", onClick:handlePayslipView },
+    { icon: <FaTasks />, label: "Assign Task", onClick: () => setShowModal(true) },
+  ].map((action, index) => (
+    <Col key={index} xs={6} sm={4} md={3}>
+      <div
+        className="d-flex align-items-center gap-2 px-3 py-2 rounded-3 me-3"
+        style={{
+          backgroundColor: '#f8f9fa',
+          fontWeight: 500,
+          fontSize: '14px',
+          color: '#2f3542',
+          border: '1px solid #e3e6ea',
+          cursor: 'pointer',
+          transition: 'all 0.2s ease',
+        }}
+        onClick={action.onClick || null} // Only assign if it exists
+      >
+        <span style={{ fontSize: '16px' }}>{action.icon}</span>
+        <span>{action.label}</span>
+      </div>
+    </Col>
+  ))}
+</Row>
+
 </Card>
 
 
@@ -446,12 +654,13 @@ const handleDeleteStaff = async () => {
     </Col>
   </Row>
 
-  <Row className="mb-3">
-    <Col md={4}>
-      <strong>COVID-19 Vaccinated:</strong><br />
-      {staff.covid_vaccinated}
-    </Col>
-  </Row>
+ <Row className="mb-3">
+  <Col md={4}>
+    <strong>COVID-19 Vaccinated:</strong><br />
+    {staff.covid_vaccinated === 1 ? 'Yes' : 'No'}
+  </Col>
+</Row>
+
 
   <Row className="mb-3">
     <Col>
@@ -540,7 +749,7 @@ const handleDeleteStaff = async () => {
         <div>
           <div style={{ fontSize: '0.875rem', color: '#6c757d' }}>Gross Salary / Month</div>
           <div style={{ fontWeight: 600, fontSize: '1.1rem', color: '#212529', marginTop: '4px' }}>
-            ₹{staff?.monthly_rate || '0.00'}
+            ₹{staff?.daily_remuneration || '0.00'}
           </div>
         </div>
       </Col>
@@ -584,7 +793,7 @@ const handleDeleteStaff = async () => {
 
 
 
-   <Tab
+  <Tab
   eventKey="leave"
   title={
     <span className="d-flex align-items-center gap-1">
@@ -594,9 +803,9 @@ const handleDeleteStaff = async () => {
   className="p-3"
 >
   <h5 className="mb-3">Leave History</h5>
-  <hr/>
+  <hr />
 
- <div className="table-responsive">
+  <div className="table-responsive">
     <table className="table table-hover align-middle">
       <thead className="table-light">
         <tr>
@@ -604,111 +813,141 @@ const handleDeleteStaff = async () => {
           <th>From</th>
           <th>To</th>
           <th>Reason</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-       <tbody>
-  {staff?.leave_requests?.length > 0 ? (
-    staff.leave_requests.map((leave, idx) => (
-      <tr key={idx} className="bg-light">
-        <td>{leave.leave_type}</td>
-        <td>{leave.from_date}</td>
-        <td>{leave.to_date}</td>
-        <td>{leave.reason || '—'}</td>
-        <td>
-          <span
-            className={`badge rounded-pill ${
-              leave.is_emergency ? 'bg-danger text-white' : 'bg-secondary text-dark'
-            }`}
-          >
-            {leave.is_emergency ? 'Yes' : 'No'}
-          </span>
-        </td>
-        <td>
-          <span
-            className="badge"
-            style={{
-              backgroundColor:
-                leave.status === 'APPROVED'
-                  ? '#d4edda'
-                  : leave.status === 'REJECTED'
-                  ? '#f8d7da'
-                  : '#fff3cd',
-              color:
-                leave.status === 'APPROVED'
-                  ? '#155724'
-                  : leave.status === 'REJECTED'
-                  ? '#721c24'
-                  : '#856404',
-              padding: '0.4em 0.75em',
-              borderRadius: '8px',
-            }}
-          >
-            {leave.status}
-          </span>
-        </td>
-      </tr>
-    ))
-  ) : (
-    <tr>
-      <td colSpan="6" className="text-center text-muted">
-        No leave requests found.
-      </td>
-    </tr>
-  )}
-</tbody>
-
-    </table>
-  </div>
-</Tab>
-
-
-   <Tab
-  eventKey="project"
-  title={
-    <span className="d-flex align-items-center gap-1">
-      <FaTasks /> Project & Task
-    </span>
-  }
-  className="p-3"
->
-  <h5 className="mb-3">Assigned Projects</h5>
-
-  <div className="table-responsive">
-    <table className="table table-hover align-middle">
-      <thead className="table-light">
-        <tr>
-          <th>Project Name</th>
-          <th>Customer</th>
-          <th>Value</th>
+          <th>Emergency</th>
           <th>Status</th>
         </tr>
       </thead>
       <tbody>
-        <tr>
-          <td>Global Events Annual Gala 2025</td>
-          <td>Global Events</td>
-          <td>₹3,00,000</td>
-          <td>
-            <span
-              className="badge"
-              style={{
-                backgroundColor: '#cce5ff',
-                color: '#004085',
-                padding: '0.4em 0.75em',
-                borderRadius: '8px',
-              }}
-            >
-              In Progress
-            </span>
-          </td>
-        </tr>
-
-        {/* You can duplicate or dynamically map more rows here */}
+        {leaves.length > 0 ? (
+          leaves.map((leave, idx) => (
+            <tr key={idx} className="bg-light">
+              <td>{leave.leave_type}</td>
+              <td>{leave.from_date}</td>
+              <td>{leave.to_date}</td>
+              <td>{leave.reason || '—'}</td>
+              <td>
+                <span
+                  className={`badge rounded-pill ${
+                    leave.is_emergency ? 'bg-danger text-white' : 'bg-secondary text-dark'
+                  }`}
+                >
+                  {leave.is_emergency ? 'Yes' : 'No'}
+                </span>
+              </td>
+              <td>
+                <span
+                  className="badge"
+                  style={{
+                    backgroundColor:
+                      leave.status === 'APPROVED'
+                        ? '#d4edda'
+                        : leave.status === 'REJECTED'
+                        ? '#f8d7da'
+                        : '#fff3cd',
+                    color:
+                      leave.status === 'APPROVED'
+                        ? '#155724'
+                        : leave.status === 'REJECTED'
+                        ? '#721c24'
+                        : '#856404',
+                    padding: '0.4em 0.75em',
+                    borderRadius: '8px',
+                  }}
+                >
+                  {leave.status}
+                </span>
+              </td>
+            </tr>
+          ))
+        ) : (
+          <tr>
+            <td colSpan="6" className="text-center text-muted">
+              No leave requests found.
+            </td>
+          </tr>
+        )}
       </tbody>
     </table>
   </div>
 </Tab>
+
+
+
+ <Tab
+      eventKey="project"
+      title={
+        <span className="d-flex align-items-center gap-1">
+          <FaTasks /> Project & Task
+        </span>
+      }
+      className="p-3"
+    >
+      <h5 className="mb-3">Assigned Projects</h5>
+
+      {loading ? (
+        <p>Loading tasks...</p>
+      ) : (
+        <div className="table-responsive">
+          <table className="table table-hover align-middle">
+            <thead className="table-light">
+              <tr>
+                <th>Project Name</th>
+                <th>Deadline</th>
+                <th>Duration</th>
+                <th>Value</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {userTasks.length > 0 ? (
+                userTasks.map((task, index) => (
+                  <tr key={index}>
+                    <td>{task.project_name || task.task_name}</td>
+                    <td>{new Date(task.deadline).toLocaleDateString()}</td>
+                    <td>{task.duration || 'N/A'}</td>
+                    <td>
+                      {task.project_value
+                        ? `₹${parseFloat(task.project_value).toLocaleString()}`
+                        : '—'}
+                    </td>
+                    <td>
+                      <span
+                        className="badge"
+                        style={{
+                          backgroundColor:
+                            task.project_status === 'Completed'
+                              ? '#d4edda'
+                              : task.project_status === 'Pending'
+                              ? '#fff3cd'
+                              : '#cce5ff',
+                          color:
+                            task.project_status === 'Completed'
+                              ? '#155724'
+                              : task.project_status === 'Pending'
+                              ? '#856404'
+                              : '#004085',
+                          padding: '0.4em 0.75em',
+                          borderRadius: '8px',
+                        }}
+                      >
+                        {task.project_status || '—'}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="5" className="text-center text-muted">
+                    No tasks found
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </Tab>
+
 
 
   <Tab
@@ -723,41 +962,37 @@ const handleDeleteStaff = async () => {
   <h5 className="mb-3">Payslip History</h5>
 
   <div className="table-responsive">
-    <table className="table table-hover align-middle">
-      <thead className="table-light">
-        <tr>
-          <th>Month</th>
-          <th>Gross Salary</th>
-          <th>Deductions</th>
-          <th>Net Salary</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>June 2025</td>
-          <td>₹75,000</td>
-          <td>₹5,000</td>
-          <td>₹70,000</td>
-          <td>
-            <button className="btn btn-sm btn-outline-primary d-flex align-items-center gap-1" style={{border:"none"}}>
-              <FaDownload /> Download
-            </button>
-          </td>
-        </tr>
-        <tr>
-          <td>May 2025</td>
-          <td>₹75,000</td>
-          <td>₹5,000</td>
-          <td>₹70,000</td>
-          <td>
-            <button className="btn btn-sm btn-outline-primary d-flex align-items-center gap-1" style={{border:"none"}}>
-              <FaDownload /> Download
-            </button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+   <table className="table table-hover align-middle">
+  <thead className="table-light">
+    <tr>
+      <th>Month</th>
+      <th>Gross Salary</th>
+      <th>Deductions</th>
+      <th>Net Salary</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody>
+    {currentMonthPayslip && (
+      <tr>
+        <td>{currentMonthPayslip.month}</td>
+        <td>₹{currentMonthPayslip.gross_salary}</td>
+        <td>₹{currentMonthPayslip.deductions}</td>
+        <td>₹{currentMonthPayslip.net_salary}</td>
+        <td>
+          <button
+            className="btn btn-sm btn-outline-primary d-flex align-items-center gap-1"
+            style={{ border: 'none' }}
+            onClick={() => handleDownloadPayslip(currentMonthPayslip)}
+          >
+            <FaDownload /> Download
+          </button>
+        </td>
+      </tr>
+    )}
+  </tbody>
+</table>
+
   </div>
 </Tab>
 
@@ -765,6 +1000,11 @@ const handleDeleteStaff = async () => {
 </Card>
 </>
 )}
+<ViewPayslipModal
+  show={showPayslipModal}
+  onHide={() => setShowPayslipModal(false)}
+  staff={staff}
+/>
 <Modal
   show={showEditModal}
   onHide={() => setShowEditModal(false)}
@@ -805,9 +1045,9 @@ const handleDeleteStaff = async () => {
         onChange={(e) => setOrganization(e.target.value)}
       >
         <option value="">Select Organization</option>
-        <option>Bangalore Branch</option>
-        <option>Kochi Branch</option>
-        <option>Calicut Branch</option>
+        <option>Bangalore Organization</option>
+        <option>Kochi Organization</option>
+        <option>Calicut Organization</option>
       </Form.Select>
     </Col>
   </Row>
@@ -991,7 +1231,206 @@ const handleDeleteStaff = async () => {
   </Modal.Footer>
 </Modal>
 
-        
+<Modal show={showModal} onHide={()=> setShowModal(false)} centered>
+      <Modal.Header closeButton>
+        <Modal.Title>Assign Task to {staff?.name}</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+        <Form>
+          <Form.Group controlId="task_name" className="mb-3">
+            <Form.Label>Task Name</Form.Label>
+            <Form.Control
+              type="text"
+              name="task_name"
+              value={formData.task_name}
+              onChange={handleChanges}
+              required
+            />
+          </Form.Group>
+
+          <Form.Group controlId="task_description" className="mb-3">
+            <Form.Label>Task Description</Form.Label>
+            <Form.Control
+              as="textarea"
+              name="task_description"
+              value={formData.task_description}
+              onChange={handleChanges}
+              rows={3}
+            />
+          </Form.Group>
+
+          <Form.Group controlId="deadline" className="mb-3">
+            <Form.Label>Deadline</Form.Label>
+            <Form.Control
+              type="date"
+              name="deadline"
+              value={formData.deadline}
+              onChange={handleChanges}
+              required
+            />
+          </Form.Group>
+
+          <Form.Group controlId="project_name" className="mb-3">
+            <Form.Label>Project Name</Form.Label>
+            <Form.Control
+              type="text"
+              name="project_name"
+              value={formData.project_name}
+              onChange={handleChanges}
+            />
+          </Form.Group>
+
+          <Form.Group controlId="project_value" className="mb-3">
+            <Form.Label>Project Value</Form.Label>
+            <Form.Control
+              type="number"
+              name="project_value"
+              value={formData.project_value}
+              onChange={handleChanges}
+            />
+          </Form.Group>
+
+          <Form.Group controlId="project_status" className="mb-3">
+            <Form.Label>Project Status</Form.Label>
+            <Form.Select
+              name="project_status"
+              value={formData.project_status}
+              onChange={handleChanges}
+            >
+              <option value="">Select status</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Completed">Completed</option>
+              <option value="Pending">Pending</option>
+            </Form.Select>
+          </Form.Group>
+        </Form>
+      </Modal.Body>
+
+      <Modal.Footer>
+        <Button variant="secondary" onClick={()=> setShowModal(false)}>
+          Cancel
+        </Button>
+        <Button variant="primary" onClick={handleSubmit}>
+          Assign Task
+        </Button>
+      </Modal.Footer>
+    </Modal>
+        <Modal show={showLeaveModal} onHide={() => setShowLeaveModal(false)} centered   dialogClassName="square-modal">
+  <Modal.Header closeButton>
+    <Modal.Title>Request Leave</Modal.Title>
+  </Modal.Header>
+  <Modal.Body>
+    <Form>
+      <Form.Group className="mb-3">
+        <Form.Label>Leave Type</Form.Label>
+       <Form.Select
+  name="leave_type"
+  value={leaveForm.leave_type}
+  onChange={(e) => setLeaveForm(prev => ({ ...prev, leave_type: e.target.value }))}
+>
+  <option value="">-- Select Leave Type --</option>
+  <option>Annual Leave</option>
+  <option>Sick Leave</option>
+  <option>Maternity/Paternity Leave</option>
+  <option>Bereavement Leave</option>
+  <option>Casual Leave</option>
+  <option>Paid Leave</option>
+  <option>Unpaid Leave</option>
+</Form.Select>
+
+      </Form.Group>
+
+      <Form.Group className="mb-3">
+        <Form.Label>From Date</Form.Label>
+        <Form.Control
+          type="date"
+          name="from_date"
+          value={leaveForm.from_date}
+          onChange={(e) => setLeaveForm(prev => ({ ...prev, from_date: e.target.value }))}
+        />
+      </Form.Group>
+
+      <Form.Group className="mb-3">
+        <Form.Label>To Date</Form.Label>
+        <Form.Control
+          type="date"
+          name="to_date"
+          value={leaveForm.to_date}
+          onChange={(e) => setLeaveForm(prev => ({ ...prev, to_date: e.target.value }))}
+        />
+      </Form.Group>
+
+      <Form.Group className="mb-3">
+        <Form.Label>Reason</Form.Label>
+        <Form.Control
+          as="textarea"
+          rows={2}
+          name="reason"
+          value={leaveForm.reason}
+          onChange={(e) => setLeaveForm(prev => ({ ...prev, reason: e.target.value }))}
+        />
+      </Form.Group>
+
+      <Form.Check
+        type="checkbox"
+        label="Emergency Leave"
+        checked={leaveForm.is_emergency}
+        onChange={(e) => setLeaveForm(prev => ({ ...prev, is_emergency: e.target.checked }))}
+      />
+    </Form>
+  </Modal.Body>
+  <Modal.Footer>
+    <Button variant="secondary" onClick={() => setShowLeaveModal(false)}>
+      Cancel
+    </Button>
+    <Button variant="primary" onClick={handleLeaveSubmit}>
+      Submit Request
+    </Button>
+  </Modal.Footer>
+</Modal>
+<Modal show={showAttendanceModal} onHide={() => setShowAttendanceModal(false)}>
+  <Modal.Header closeButton>
+    <Modal.Title>Mark Attendance</Modal.Title>
+  </Modal.Header>
+  <Modal.Body>
+    <div className="mb-3">
+      <label className="form-label fw-semibold">Select Status:</label>
+      <div className="d-flex gap-3">
+        {["Present", "Absent", "Late"].map((status) => (
+          <Button
+            key={status}
+            variant={attendanceStatus === status ? "primary" : "outline-secondary"}
+            onClick={() => setAttendanceStatus(status)}
+          >
+            {status}
+          </Button>
+        ))}
+      </div>
+    </div>
+
+    <hr />
+    <h6 className="fw-bold mb-2">This Month's Attendance</h6>
+    {loadingHistory ? (
+      <p>Loading...</p>
+    ) : attendanceHistory.length === 0 ? (
+      <p className="text-muted">No attendance records yet.</p>
+    ) : (
+      <ul className="list-group small">
+        {attendanceHistory.map((entry, i) => (
+          <li className="list-group-item d-flex justify-content-between" key={i}>
+            <span>{entry.date}</span>
+            <span className={`badge bg-${getStatusColor(entry.status)}`}>{entry.status}</span>
+          </li>
+        ))}
+      </ul>
+    )}
+  </Modal.Body>
+  <Modal.Footer>
+    <Button variant="secondary" onClick={() => setShowAttendanceModal(false)}>Close</Button>
+    <Button variant="success" onClick={handleSubmitAttendance}>Submit</Button>
+  </Modal.Footer>
+</Modal>
+
             </div>
     </>
   );

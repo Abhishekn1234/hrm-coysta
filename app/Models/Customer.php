@@ -35,6 +35,10 @@ class Customer extends Model
     {
         return $this->hasMany(ShippingAddress::class);
     }
+public function tasks()
+{
+    return $this->hasMany(Task::class, 'customer_id');
+}
 
     public function contactPersons()
     {
