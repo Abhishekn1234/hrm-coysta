@@ -40,6 +40,15 @@ Route::prefix('projects')->group(function () {
    
     Route::get('/customer/{customer_id}', [ProjectController::class, 'getByCustomer']);
 });
+Route::prefix('admin')->group(function () {
+    Route::get('/organizations', [HrmController::class, 'index'])->name('organizations.index');
+    Route::get('/organizations/create', [HrmController::class, 'create'])->name('organizations.create');
+    Route::post('/organizations', [HrmController::class, 'store'])->name('organizations.store');
+    Route::get('/organizations/{organization}', [HrmController::class, 'show'])->name('organizations.show');
+    Route::get('/organizations/{organization}/edit', [HrmController::class, 'edit'])->name('organizations.edit');
+    Route::put('/organizations/{organization}', [HrmController::class, 'update'])->name('organizations.update');
+    Route::delete('/organizations/{organization}', [HrmController::class, 'destroy'])->name('organizations.destroy');
+});
 Route::post('/v1/customers/{customer}/invoices', [CustomerController::class, 'storeInvoice']);
 Route::get('/v1/customers/{customer}/invoices', [CustomerController::class, 'getInvoices']);
 

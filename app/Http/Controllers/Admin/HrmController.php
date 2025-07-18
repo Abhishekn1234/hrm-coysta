@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use App\Models\LeaveRequest;
+use App\Models\Organization;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -732,5 +733,50 @@ public function bulkUpdateBenefits(Request $request)
 
     return response()->json(['message' => 'All benefits updated successfully.']);
 }
+public function index()
+    {
+        $organizations = Organization::all();
+        return view('organizations.index', compact('organizations'));
+    }
 
+    public function create()
+    {
+        return view('organizations.create');
+    }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255'
+        ]);
+
+        Organization::create($request->only('name'));
+        return redirect()->route('organizations.index')->with('success', 'Organization created successfully.');
+    }
+
+    public function show(Organization $organization)
+    {
+        return view('organizations.show', compact('organization'));
+    }
+
+    public function edit(Organization $organization)
+    {
+        return view('organizations.edit', compact('organization'));
+    }
+
+    public function update(Request $request, Organization $organization)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255'
+        ]);
+
+        $organization->update($request->only('name'));
+        return redirect()->route('organizations.index')->with('success', 'Organization updated.');
+    }
+
+    public function destroy(Organization $organization)
+    {
+        $organization->delete();
+        return redirect()->route('organizations.index')->with('success', 'Organization deleted.');
+    }
 }

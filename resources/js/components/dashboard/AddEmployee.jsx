@@ -10,6 +10,8 @@ import AddDepartmentForm from "./AddDepartmentForm";
 import ManageLeaves from "./ManageLeaves";
 import ProcessPayroll from "./ProcessPayroll";
 import Tables from "./Tables";
+import AddOrganizationForm from "./AddOrganizationForm";
+
 import {
   UserPlus, // Lucide-react icons or Bootstrap Icons
   Network,
@@ -55,37 +57,42 @@ export default function AddEmployee({ selected }) {
   };
 
  const options = [
-  { 
-    id: 1, 
+  {
+    id: 1,
     title: "Add Employee",
-    icon: <FiUserPlus  size={ICON_SIZE} />,
-    bgColor: "#3b5998"
+    icon: <FiUserPlus size={ICON_SIZE} />,
+    bgColor: "#3b5998",
   },
-  { 
-    id: 2, 
-    title: "Add Department", 
+  {
+    id: 2,
+    title: "Add Department",
     icon: <FiBriefcase color="#3b5998" size={ICON_SIZE} />,
-     bgColor: "blue"
+    bgColor: "blue",
   },
-  { 
-    id: 3, 
-    title: "Manage Leaves", 
+  {
+    id: 3,
+    title: "Manage Leaves",
     icon: <FaUmbrellaBeach color="#3b5998" size={ICON_SIZE} />,
-     bgColor: "blue"
+    bgColor: "blue",
   },
-  { 
-    id: 4, 
-    title: "Process Payroll", 
-    icon: <FaMoneyBillWave  size={ICON_SIZE} />,
-     bgColor: "#28a745"
+  {
+    id: 4,
+    title: "Process Payroll",
+    icon: <FaMoneyBillWave size={ICON_SIZE} />,
+    bgColor: "#28a745",
   },
-  { 
-    id: 5, 
-    title: "Export Data", 
-    icon: <HiOutlineDocumentArrowDown size={ICON_SIZE} />
+  {
+    id: 5,
+    title: "Export Data",
+    icon: <HiOutlineDocumentArrowDown size={ICON_SIZE} />,
+  },
+  {
+    id: 6,
+    title: "Add Organization",
+    icon: <Network size={ICON_SIZE} />,
+    bgColor: "#6f42c1",
   },
 ];
-
 
   const renderModalContent = () => {
   switch (selectedId) {
@@ -102,6 +109,9 @@ export default function AddEmployee({ selected }) {
         onClose={handleClose}
       />
       );
+      case 6:
+        return <AddOrganizationForm onClose={handleClose} />;
+
     default:
       return null;
   }
